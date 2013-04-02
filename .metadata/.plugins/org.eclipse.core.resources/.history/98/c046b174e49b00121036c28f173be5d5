@@ -1,0 +1,56 @@
+package com.westernarc.gardenwarden.Node;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry;
+import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.materials.Material;
+import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.model.still.StillModel;
+
+public class PlayerNode extends Node {
+	private StillModel framesWalk[];
+	private StillModel framesStand[];
+	private StillModel framesAttack[];
+	
+	private int cntCurFrame;
+	private float tmrFrame;
+	private static final float CONST_FRAMERATE = 1/30f;
+	
+	private enum ANIM {walk, stand, attack}
+	private ANIM varCurAnimation;
+	
+	public PlayerNode() {
+		texture = new Texture(Gdx.files.internal("textures/playergardentex.png"));
+		material = new Material("mat", new TextureAttribute(texture, 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse));
+		
+		framesWalk = new StillModel[20];
+		for(int i = 0; i < 20; i++) {
+			framesWalk[i] = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/playergarden"+i+".g3dt"));
+			framesWalk[i].setMaterial(material);
+		}
+		framesStand = new StillModel[5];
+		for(int i = 0; i < 5; i++) {
+			framesWalk[i] = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/playerstand"+i+".g3dt"));
+		}
+		
+		model = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/playergarden1.g3dt"));
+		
+		model.setMaterial(material);
+		cntCurFrame = 5;
+	}
+	
+	public void update(float tpf) {
+		tmrFrame += tpf;
+		if(tmrFrame > CONST_FRAMERATE) {
+			tmrFrame = 0;
+			cntCurFrame++;
+		}
+		
+		if(cntCurFrame >= 20) {
+			cntCurFrame = 1;
+		}
+		setModel(framesWalk[cntCurFrame]);
+	}
+}

@@ -1,0 +1,13 @@
+package com.westernarc.gardenwarden.Node;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry;
+
+public class PlayerNode extends Node {
+	public PlayerNode() {
+		model = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("assets/models/playergarden1.g3dt"));
+		texture = new Texture(Gdx.files.internal("textures/playergardentex.png"));
+		material = new Material();
+	}
+}
