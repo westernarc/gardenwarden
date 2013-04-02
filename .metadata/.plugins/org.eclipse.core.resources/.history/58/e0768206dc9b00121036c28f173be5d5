@@ -1,0 +1,6 @@
+package com.westernarc.gardenwarden.Node;
+
+public class Node {
+	StillModel model;
+	
+}
