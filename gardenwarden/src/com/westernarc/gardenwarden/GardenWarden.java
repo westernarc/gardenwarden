@@ -44,7 +44,8 @@ public class GardenWarden implements ApplicationListener {
 	Node nodGarden;
 	
 	@Override
-	public void create() {		
+	public void create() {
+		System.out.println("Creating");
 		SCREEN_WIDTH = Gdx.graphics.getWidth();
 		SCREEN_HEIGHT = Gdx.graphics.getHeight();
 		
@@ -60,11 +61,12 @@ public class GardenWarden implements ApplicationListener {
 		cam3d.far = 2000;
 		//cam3d.near = 0;
 		
-		
+		//System.out.println("Cam setup, loading models");
 		nodPlayer = new PlayerNode();
 		nodGarden = new Node();
 		nodGarden.setModel(ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/garden.g3dt")));
 		nodGarden.setMaterial(new Material("mat", new TextureAttribute(new Texture(Gdx.files.internal("textures/gardentex.png")), 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse)));
+		System.out.println("Creation finished.");
 	}
 
 	@Override
@@ -100,7 +102,9 @@ public class GardenWarden implements ApplicationListener {
 		batch.end();
 		
 		if(Gdx.input.isKeyPressed(Keys.ANY_KEY)) {
-			nodPlayer.setAnim(PlayerNode.ANIM.walk);
+			if(!Gdx.input.isKeyPressed(Keys.E) && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack) {
+				nodPlayer.setAnim(PlayerNode.ANIM.walk);
+			}
 		} else {
 			nodPlayer.setAnim(PlayerNode.ANIM.stand);
 		}
@@ -114,13 +118,15 @@ public class GardenWarden implements ApplicationListener {
 			nodPlayer.rotate(-5);
 		}
 		if(Gdx.input.isKeyPressed(Keys.W)){
-			nodPlayer.move(nodPlayer.getDirection());
+			if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack){ 
+				nodPlayer.move(nodPlayer.getDirection());
+			}
 		}
 		if(Gdx.input.isKeyPressed(Keys.R)){
 			nodPlayer.setAnim(PlayerNode.ANIM.walk);
 		}
 		if(Gdx.input.isKeyPressed(Keys.E)){
-			nodPlayer.setAnim(PlayerNode.ANIM.stand);
+			nodPlayer.setAnim(PlayerNode.ANIM.attack);
 		}
 		cam3d.position.set(-camDistance + nodPlayer.getX(), camHeight, nodPlayer.getPosition().z);
 		cam3d.lookAt(nodPlayer.getX(), 0, nodPlayer.getZ());

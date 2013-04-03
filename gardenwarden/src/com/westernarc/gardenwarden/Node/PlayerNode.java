@@ -47,7 +47,11 @@ public class PlayerNode extends Node {
 			framesStandL[i] = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/playerstandL"+i+".g3dt"));
 			framesStandL[i].setMaterial(material);
 		}
-		
+		framesAttack = new StillModel[10];
+		for(int i = 0; i < 10; i++) {
+			framesAttack[i] = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/playerattack"+i+".g3dt"));
+			framesAttack[i].setMaterial(material);
+		}
 		varCurAnimation = ANIM.stand;
 		
 		model = framesStand[5];
@@ -70,7 +74,9 @@ public class PlayerNode extends Node {
 		}
 		switch(varCurAnimation) {
 		case attack:
-			
+			if(cntCurFrame >= 10) {
+				cntCurFrame = 1;
+			}
 			break;
 		case stand:
 		case standL:
@@ -90,6 +96,17 @@ public class PlayerNode extends Node {
 
 		switch(varCurAnimation) {
 		case attack:
+			if(cntCurFrame == 9) {
+				cntCurFrame = 1;
+				varCurAnimation = ANIM.stand;
+				setModel(framesStand[cntCurFrame]);
+			} else {
+				//During attacks, move forward for the first 5 frames
+				if(cntCurFrame < 4) {
+					move(direction.cpy().mul(4));
+				}
+				setModel(framesAttack[cntCurFrame]);
+			}
 			break;
 		case stand:
 			setModel(framesStand[cntCurFrame]);
@@ -121,6 +138,10 @@ public class PlayerNode extends Node {
 	public void setAnim(ANIM anim) {
 		switch(anim){
 		case attack:
+			if(varCurAnimation != ANIM.attack){
+				varCurAnimation = ANIM.attack;
+				cntCurFrame = 1;
+			}
 			break;
 		case stand:
 			if(varCurAnimation == ANIM.walk) 
@@ -141,5 +162,9 @@ public class PlayerNode extends Node {
 	}
 	public Vector3 getDirection() {
 		return direction;
+	}
+	
+	public ANIM getCurrentAnimation() {
+		return varCurAnimation;
 	}
 }
