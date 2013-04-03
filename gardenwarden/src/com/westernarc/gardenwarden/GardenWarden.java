@@ -3,6 +3,7 @@ package com.westernarc.gardenwarden;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -11,6 +12,13 @@ import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry;
+import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.materials.Material;
+import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
+import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
+import com.westernarc.gardenwarden.Node.Node;
 import com.westernarc.gardenwarden.Node.PlayerNode;
 
 public class GardenWarden implements ApplicationListener {
@@ -23,7 +31,8 @@ public class GardenWarden implements ApplicationListener {
 	
 	float camAngle;
 	float camDistance;
-
+	float camHeight;
+	
 	//Game flow:
 	//Splash Screen: 
 	private enum GAME_STATE {
@@ -32,6 +41,7 @@ public class GardenWarden implements ApplicationListener {
 	private GAME_STATE gameState;
 	
 	PlayerNode nodPlayer;
+	Node nodGarden;
 	
 	@Override
 	public void create() {		
@@ -42,13 +52,19 @@ public class GardenWarden implements ApplicationListener {
 		batch = new SpriteBatch();
 		
 		cam3d = new PerspectiveCamera(67, SCREEN_WIDTH, SCREEN_HEIGHT);
-		camDistance = 100;
-		cam3d.position.set((float)Math.sin(camAngle) * camDistance, 120, (float)Math.cos(camAngle) * camDistance);
+		camDistance = 20;
+		camHeight = 20;
+		camAngle = (float)-Math.PI/2f;
+		cam3d.position.set((float)Math.sin(camAngle) * camDistance, camHeight, (float)Math.cos(camAngle) * camDistance);
 		cam3d.lookAt(0, 70, 0);
-		cam3d.far = 1000;
+		cam3d.far = 2000;
+		//cam3d.near = 0;
 		
 		
 		nodPlayer = new PlayerNode();
+		nodGarden = new Node();
+		nodGarden.setModel(ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/garden.g3dt")));
+		nodGarden.setMaterial(new Material("mat", new TextureAttribute(new Texture(Gdx.files.internal("textures/gardentex.png")), 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse)));
 	}
 
 	@Override
@@ -60,16 +76,20 @@ public class GardenWarden implements ApplicationListener {
 	public void render() {
 		float tpf = Gdx.graphics.getDeltaTime();
 		
-		Gdx.gl10.glClearColor(0.2f, 0.2f, 0.2f, 1);
+		Gdx.gl10.glClearColor(0.51f, 0.76f, 0.88f, 1);
 		
 		Gdx.gl10.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 		Gdx.gl10.glEnable(GL10.GL_DEPTH_TEST);
 		Gdx.gl10.glEnable(GL10.GL_TEXTURE_2D);
 		Gdx.gl10.glEnable(GL10.GL_COLOR_MATERIAL);
 		
-		Gdx.gl10.glScalef(20, 20, 20);
+		Gdx.gl10.glPushMatrix();
+		Gdx.gl10.glTranslatef(nodPlayer.getX(), nodPlayer.getY(), nodPlayer.getZ());
+		Gdx.gl10.glRotatef(nodPlayer.getRotation(), 0, 1, 0);
 		nodPlayer.render();
+		Gdx.gl10.glPopMatrix();
 		
+		nodGarden.render();
 		Gdx.gl10.glDisable(GL10.GL_DEPTH_TEST);
 		Gdx.gl10.glDisable(GL10.GL_TEXTURE_2D);
 		Gdx.gl10.glDisable(GL10.GL_COLOR_MATERIAL);
@@ -79,18 +99,22 @@ public class GardenWarden implements ApplicationListener {
 		batch.begin();
 		batch.end();
 		
-
+		if(Gdx.input.isKeyPressed(Keys.ANY_KEY)) {
+			nodPlayer.setAnim(PlayerNode.ANIM.walk);
+		} else {
+			nodPlayer.setAnim(PlayerNode.ANIM.stand);
+		}
 		if(Gdx.input.isKeyPressed(Keys.A)){
-			camAngle -= 0.1f;
+			nodPlayer.rotate(5);
 		}
 		if(Gdx.input.isKeyPressed(Keys.S)){
-			camDistance -= 1;
+			nodPlayer.move(Vector3.X);
 		}
 		if(Gdx.input.isKeyPressed(Keys.D)){
-			camAngle += 0.1f;
+			nodPlayer.rotate(-5);
 		}
 		if(Gdx.input.isKeyPressed(Keys.W)){
-			camDistance += 1;
+			nodPlayer.move(nodPlayer.getDirection());
 		}
 		if(Gdx.input.isKeyPressed(Keys.R)){
 			nodPlayer.setAnim(PlayerNode.ANIM.walk);
@@ -98,12 +122,10 @@ public class GardenWarden implements ApplicationListener {
 		if(Gdx.input.isKeyPressed(Keys.E)){
 			nodPlayer.setAnim(PlayerNode.ANIM.stand);
 		}
-		cam3d.position.set((float)Math.sin(camAngle) * camDistance, 120, (float)Math.cos(camAngle) * camDistance);
-		cam3d.lookAt(0, 70, 0);
+		cam3d.position.set(-camDistance + nodPlayer.getX(), camHeight, nodPlayer.getPosition().z);
+		cam3d.lookAt(nodPlayer.getX(), 0, nodPlayer.getZ());
 		cam3d.update(true);
 		cam3d.apply(Gdx.gl10);
-		
-		
 		
 		nodPlayer.update(tpf);
 	}

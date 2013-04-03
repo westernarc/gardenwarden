@@ -1,0 +1,49 @@
+package com.westernarc.gardenwarden.Node;
+
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g3d.materials.Material;
+import com.badlogic.gdx.graphics.g3d.model.still.StillModel;
+import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
+
+public class Node {
+	protected Texture texture;
+	protected Material material;
+	protected StillModel model;
+	
+	protected Vector3 position;
+	protected Quaternion rotation;
+	
+	public StillModel getModel() {
+		return model;
+	}
+	public void setModel(StillModel model) {
+		this.model = model;
+	}
+	public void setMaterial(Material material) {
+		this.material = material;
+		model.setMaterial(this.material);
+	}
+	public void render() {
+		model.render();
+	}
+	
+	public void setPosition(Vector3 v) {
+		position.set(v.x,v.y,v.z);
+	}
+	public Vector3 getPosition() {
+		return position;
+	}
+	public float getX() {
+		return position.x;
+	}
+	public float getY() {
+		return position.y;
+	}
+	public float getZ() {
+		return position.z;
+	}
+	public void setRotation(Quaternion q) {
+		rotation.set(q.x, q.y, q.z, q.w);
+	}
+}

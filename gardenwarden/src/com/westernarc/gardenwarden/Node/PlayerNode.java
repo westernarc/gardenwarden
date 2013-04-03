@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.materials.Material;
 import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.still.StillModel;
+import com.badlogic.gdx.math.Vector3;
 
 public class PlayerNode extends Node {
 	private StillModel framesWalk[];
@@ -22,7 +23,10 @@ public class PlayerNode extends Node {
 	public enum ANIM {walk, stand, standL, attack}
 	private ANIM varCurAnimation;
 	
-	boolean flgWalkToStand;
+	private boolean flgWalkToStand;
+	
+	private Vector3 direction;
+	public static final float CONST_SPEED = 0.2f;
 	
 	public PlayerNode() {
 		texture = new Texture(Gdx.files.internal("textures/playergardentex.png"));
@@ -52,9 +56,13 @@ public class PlayerNode extends Node {
 		cntCurFrame = 5;
 		
 		flgWalkToStand = false;
+		
+		direction = new Vector3();
 	}
 	
 	public void update(float tpf) {
+		direction.set(-(float)Math.cos(rotation / 360 * Math.PI * 2) * CONST_SPEED, 0, (float)Math.sin(rotation / 360 * Math.PI * 2) * CONST_SPEED);
+		
 		tmrFrame += tpf;
 		if(tmrFrame > CONST_FRAMERATE) {
 			tmrFrame = 0;
@@ -130,5 +138,8 @@ public class PlayerNode extends Node {
 			break;
 		
 		}
+	}
+	public Vector3 getDirection() {
+		return direction;
 	}
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.PerspectiveCamera"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.Gdx"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.PlayerNode"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.Texture"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.materials.ColorAttribute"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.materials.Material"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.Color"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.Input.Keys"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.model.still.StillModel"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.Node"/>
+<fullyQualifiedTypeName name="java.lang.Math"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.math.Quaternion"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.math.Vector3"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.PlayerNode.ANIM"/>
+</qualifiedTypeNameHistroy>
