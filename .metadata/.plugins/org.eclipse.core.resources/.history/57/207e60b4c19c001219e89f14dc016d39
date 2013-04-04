@@ -1,0 +1,77 @@
+package com.westernarc.gardenwarden.Node;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry;
+import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.materials.Material;
+import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.model.still.StillModel;
+import com.badlogic.gdx.math.Vector3;
+import com.westernarc.gardenwarden.Node.PlayerNode.ANIM;
+
+public class EnemyNode extends Node {
+	StillModel framesWalk[];
+	
+	private int cntCurFrame;
+	private float tmrFrame;
+	private static final float CONST_FRAMERATE = 1/30f;
+	
+	public enum ANIM {walk}
+	private ANIM varCurAnimation;
+	
+	private Vector3 direction;
+	public static final float CONST_SPEED = 0.1f;
+	
+	private Node target;
+	
+	public EnemyNode() {
+		texture = new Texture(Gdx.files.internal("textures/gardentex.png"));
+		material = new Material("mat", new TextureAttribute(texture, 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse));
+		
+		framesWalk = new StillModel[10];
+		for(int i = 0; i < 10; i++) {
+			framesWalk[i] = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/roly/roly"+i+".g3dt"));
+			framesWalk[i].setMaterial(material);
+		}
+		
+		varCurAnimation = ANIM.walk;
+		model = framesWalk[0];
+		cntCurFrame = 0;
+		
+		direction = new Vector3();
+		rotation = 0;
+	}
+	public void update(float tpf, Node target) {
+		nodPlayer = this.nodPlayer;
+		
+		direction.set((float)Math.cos(rotation / 360 * Math.PI * 2) * CONST_SPEED, 0, (float)Math.sin(rotation / 360 * Math.PI * 2) * CONST_SPEED);
+		
+		move(direction);
+		
+		tmrFrame += tpf;
+		if(tmrFrame > CONST_FRAMERATE) {
+			tmrFrame = 0;
+			cntCurFrame++;
+		}
+		switch(varCurAnimation) {
+		case walk:
+			if(cntCurFrame >= 10) {
+				cntCurFrame = 1;
+			}
+			model = framesWalk[cntCurFrame];
+			break;
+		default:
+			break;
+		
+		}
+	}
+	public Vector3 getDirection() {
+		return direction;
+	}
+	
+	public ANIM getCurrentAnimation() {
+		return varCurAnimation;
+	}
+}

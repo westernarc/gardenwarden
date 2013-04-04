@@ -16,8 +16,10 @@ import com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry;
 import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.materials.Material;
 import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.westernarc.gardenwarden.Node.EnemyNode;
 import com.westernarc.gardenwarden.Node.Node;
 import com.westernarc.gardenwarden.Node.PlayerNode;
 
@@ -28,6 +30,7 @@ public class GardenWarden implements ApplicationListener {
 	private OrthographicCamera cam2d;
 	private PerspectiveCamera cam3d;
 	private SpriteBatch batch;
+	Sprite testSprite;
 	
 	float camAngle;
 	float camDistance;
@@ -42,10 +45,10 @@ public class GardenWarden implements ApplicationListener {
 	
 	PlayerNode nodPlayer;
 	Node nodGarden;
+	EnemyNode nodEnemy;
 	
 	@Override
 	public void create() {
-		System.out.println("Creating");
 		SCREEN_WIDTH = Gdx.graphics.getWidth();
 		SCREEN_HEIGHT = Gdx.graphics.getHeight();
 		
@@ -66,7 +69,10 @@ public class GardenWarden implements ApplicationListener {
 		nodGarden = new Node();
 		nodGarden.setModel(ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/garden.g3dt")));
 		nodGarden.setMaterial(new Material("mat", new TextureAttribute(new Texture(Gdx.files.internal("textures/gardentex.png")), 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse)));
-		System.out.println("Creation finished.");
+
+		nodEnemy = new EnemyNode();
+		
+		testSprite = new Sprite(new Texture(Gdx.files.internal("textures/gardentex.png")));
 	}
 
 	@Override
@@ -91,6 +97,12 @@ public class GardenWarden implements ApplicationListener {
 		nodPlayer.render();
 		Gdx.gl10.glPopMatrix();
 		
+		Gdx.gl10.glPushMatrix();
+		Gdx.gl10.glTranslatef(nodEnemy.getX(), nodEnemy.getY(), nodEnemy.getZ());
+		Gdx.gl10.glRotatef(nodEnemy.getRotation(), 0, 1, 0);
+		nodEnemy.render();
+		Gdx.gl10.glPopMatrix();
+		
 		nodGarden.render();
 		Gdx.gl10.glDisable(GL10.GL_DEPTH_TEST);
 		Gdx.gl10.glDisable(GL10.GL_TEXTURE_2D);
@@ -102,23 +114,29 @@ public class GardenWarden implements ApplicationListener {
 		batch.end();
 		
 		if(Gdx.input.isKeyPressed(Keys.ANY_KEY)) {
-			if(!Gdx.input.isKeyPressed(Keys.E) && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack) {
+			if(!Gdx.input.isKeyPressed(Keys.E) && !Gdx.input.isKeyPressed(Keys.S) && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3) {
 				nodPlayer.setAnim(PlayerNode.ANIM.walk);
 			}
 		} else {
 			nodPlayer.setAnim(PlayerNode.ANIM.stand);
 		}
 		if(Gdx.input.isKeyPressed(Keys.A)){
-			nodPlayer.rotate(5);
+			if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3){ 
+				nodPlayer.rotate(5);
+			}
 		}
 		if(Gdx.input.isKeyPressed(Keys.S)){
-			nodPlayer.move(Vector3.X);
+			if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3){ 
+				nodPlayer.setAnim(PlayerNode.ANIM.roll);
+			}
 		}
 		if(Gdx.input.isKeyPressed(Keys.D)){
-			nodPlayer.rotate(-5);
+			if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3){ 
+				nodPlayer.rotate(-5);
+			}
 		}
 		if(Gdx.input.isKeyPressed(Keys.W)){
-			if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack){ 
+			if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3){ 
 				nodPlayer.move(nodPlayer.getDirection());
 			}
 		}
@@ -132,8 +150,9 @@ public class GardenWarden implements ApplicationListener {
 		cam3d.lookAt(nodPlayer.getX(), 0, nodPlayer.getZ());
 		cam3d.update(true);
 		cam3d.apply(Gdx.gl10);
-		
+
 		nodPlayer.update(tpf);
+		nodEnemy.update(tpf, nodPlayer);
 	}
 
 	@Override

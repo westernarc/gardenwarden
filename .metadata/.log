@@ -746,3 +746,9 @@ This warning can be switched off on the Team > Git > Confirmations and Warnings 
 
 !ENTRY org.eclipse.osgi 2 1 2013-04-03 10:09:31.748
 !MESSAGE NLS unused message: Project_Local in: org.jboss.tools.project.examples.messages
+
+!ENTRY org.eclipse.mylyn.tasks.ui 2 0 2013-04-03 21:00:36.417
+!MESSAGE No search provider was registed. Tasks search is not available.
+
+!ENTRY com.google.gdt.eclipse.core 2 0 2013-04-04 00:02:55.425
+!MESSAGE Unable to connect to http://dl.google.com/eclipse/plugin4.2/compositeArtifacts.xml.

@@ -9,10 +9,13 @@
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.materials.Material"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.Color"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.Input.Keys"/>
-<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.model.still.StillModel"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.Node"/>
 <fullyQualifiedTypeName name="java.lang.Math"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.math.Quaternion"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.math.Vector3"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.math.Matrix4"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.model.still.StillModel"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.EnemyNode.ANIM"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.EnemyNode"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.PlayerNode.ANIM"/>
 </qualifiedTypeNameHistroy>
