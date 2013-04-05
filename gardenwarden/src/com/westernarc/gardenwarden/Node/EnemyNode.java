@@ -44,19 +44,52 @@ public class EnemyNode extends Node {
 		rotation = 0;
 		
 		target = new Node();
+		position.set(0,0,6);
 	}
 	public void update(float tpf, Node updateTarget) {
 		Vector3 toTargetVec = updateTarget.getPosition().cpy().sub(position);
 		
-		target.move(toTargetVec.nor());
+		target.setPosition(toTargetVec.nor());
+
+		float angle = 0;
+		if(target.getX() >= 0) { 
+			angle = (float)(Math.toDegrees(Math.atan(target.getZ()/target.getX())));
+		} else {
+			angle = (float)(Math.toDegrees(Math.atan(target.getZ()/target.getX()))) + 180;
+		}
+		if(angle <= 0) {
+			angle += 360;
+		}
+
+		float rotAngle = 360 - rotation;
+		if(rotAngle >= 360) rotAngle -= 360;
 		
-		System.out.println(target.getPosition());
+		float oppAngle = 180 + angle;
+		if(oppAngle > 360) oppAngle -= 360;
 		
+		if(angle >= 180) {
+			if(rotAngle < angle && rotAngle > oppAngle) {
+				rotation -= tpf * 150;
+			} else {
+				rotation += tpf * 150;
+			}
+		} else {
+			if(rotAngle < angle && rotAngle < oppAngle) {
+				rotation -= tpf * 150;
+			} else {
+				rotation += tpf * 150;
+			}
+		}
 		//rotation = (float)Math.tan(target.getX()/target.getZ());
-		
+		//rotation += 0.5f;
 		direction.set((float)Math.cos(rotation / 360 * Math.PI * 2) * CONST_SPEED, 0, -(float)Math.sin(rotation / 360 * Math.PI * 2) * CONST_SPEED);
-		
-		move(direction);
+		//direction.set(toTargetVec).nor().mul(0.1f);
+		if(direction.x > 0) {
+			rotation = (float)(Math.toDegrees(Math.atan(direction.z / -direction.x)));
+		} else {
+			rotation = (float)(Math.toDegrees(Math.atan(direction.z / -direction.x) + (Math.PI)));
+		}
+		//move(direction);
 		
 		tmrFrame += tpf;
 		if(tmrFrame > CONST_FRAMERATE) {

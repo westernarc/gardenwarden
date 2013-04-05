@@ -1,0 +1,15 @@
+package com.westernarc.gardenwarden.Graphics;
+
+import com.badlogic.gdx.graphics.g2d.Sprite;
+
+public class SpriteFade extends Sprite {
+	public void fadeIn(float rate) {
+		if(getColor().a < 1) {
+			if(getColor().a + rate < 1) {
+				setColor(getColor().r,getColor().b,getColor().g, getColor().a + rate);
+			} else {
+				setColor(getColor().r, getColor().b, getColor().g, 1);
+			}
+		}
+	}
+}

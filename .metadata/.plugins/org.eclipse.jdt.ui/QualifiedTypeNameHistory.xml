@@ -4,7 +4,6 @@
 <fullyQualifiedTypeName name="com.badlogic.gdx.Gdx"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.PlayerNode"/>
-<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.Texture"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.materials.ColorAttribute"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.materials.Material"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.Color"/>
@@ -18,4 +17,13 @@
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.EnemyNode.ANIM"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.EnemyNode"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.PlayerNode.ANIM"/>
+<fullyQualifiedTypeName name="java.util.ArrayList"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.decals.DecalBatch"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.decals.Decal"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g2d.BitmapFont"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g2d.Sprite"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Graphics.SpriteFade"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.Texture"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.GardenWarden.GAME_STATE"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.GardenWarden.GAMESTATE"/>
 </qualifiedTypeNameHistroy>

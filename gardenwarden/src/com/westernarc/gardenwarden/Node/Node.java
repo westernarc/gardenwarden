@@ -47,6 +47,15 @@ public class Node {
 	public float getZ() {
 		return position.z;
 	}
+	public void setX(float newx) {
+		position.x = newx;
+	}
+	public void setY(float newy) {
+		position.y = newy;
+	}
+	public void setZ(float newz) {
+		position.z = newz;
+	}
 	public void setRotation(float angle) {
 		rotation = angle;
 	}
