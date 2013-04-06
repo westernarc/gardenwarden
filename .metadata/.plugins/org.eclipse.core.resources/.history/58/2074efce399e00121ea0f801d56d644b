@@ -1,0 +1,63 @@
+package com.westernarc.gardenwarden.Graphics;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.decals.Decal;
+
+public class EffectDecal {
+	Decal decal;
+	
+	int numOfFrames;
+	float framerate;
+	float tmrFrame;
+	int curFrame;
+	int frameWidth, frameHeight;
+	
+	TextureRegion[] frames;
+	
+	boolean playing;
+	
+	public EffectDecal(int n, float fr, int frameWidth, int frameHeight) {
+		numOfFrames = n;
+		framerate = fr;
+		playing = false;
+		this.frameWidth = frameWidth;
+		this.frameHeight = frameHeight;
+	}
+	
+	public void setAnimationFiles(String url) {
+		frames = new TextureRegion[numOfFrames];
+		for(int i = 0; i < numOfFrames; i++) {
+			frames[i] = Decal.newDecal(new TextureRegion(new Texture(Gdx.files.internal(url))));
+		}
+		decal = Decal.newDecal(setframe);
+	}
+	
+	public void play() {
+		playing = true;
+	}
+	public void update(float tpf) {
+		if(playing) {
+		tmrFrame += tpf;
+			if(tmrFrame > framerate) {
+				tmrFrame = 0;
+				curFrame++;
+				if(curFrame > numOfFrames) {
+					playing = false;
+				}
+			}
+		}
+	}
+	public Decal getDecal() {
+		return decal;
+	}
+	
+	public void rotateX(float rot) {
+		decal.rotateX(rot);
+	}
+	
+	public void setPosition(float x, float y, float z) {
+		decal.setPosition(x, y, z);
+	}
+}

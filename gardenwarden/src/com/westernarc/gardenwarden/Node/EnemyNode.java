@@ -8,10 +8,12 @@ import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.materials.Material;
 import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.still.StillModel;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.westernarc.gardenwarden.Node.PlayerNode.ANIM;
 
 public class EnemyNode extends Node {
+	//Use this to give a red tint when hit
 	StillModel framesWalk[];
 	
 	private int cntCurFrame;
@@ -22,9 +24,21 @@ public class EnemyNode extends Node {
 	private ANIM varCurAnimation;
 	
 	private Vector3 direction;
-	public static final float CONST_SPEED = 0.1f;
+	private float moveSpeed = 0.1f;
 	
 	private Node target;
+	private Vector3 updateTarget;
+	
+	private static final float CONST_TARGET_CHANGE_TIME = 3;
+	private float tmrTargetChange;
+	
+	private boolean fleeing;
+	private boolean flinching;
+	private float flinchTime = 0.2f;
+	private float tmrFlinch;
+	
+	private float flinchVectorX;
+	private float flinchVectorZ;
 	
 	public EnemyNode() {
 		texture = new Texture(Gdx.files.internal("textures/gardentex.png"));
@@ -45,51 +59,75 @@ public class EnemyNode extends Node {
 		
 		target = new Node();
 		position.set(0,0,6);
+		
+		tmrTargetChange = 0;
+		updateTarget = new Vector3();
+		
+		fleeing = false;
+		flinching = false;
+		tmrFlinch = 0;
 	}
-	public void update(float tpf, Node updateTarget) {
-		Vector3 toTargetVec = updateTarget.getPosition().cpy().sub(position);
-		
-		target.setPosition(toTargetVec.nor());
-
-		float angle = 0;
-		if(target.getX() >= 0) { 
-			angle = (float)(Math.toDegrees(Math.atan(target.getZ()/target.getX())));
-		} else {
-			angle = (float)(Math.toDegrees(Math.atan(target.getZ()/target.getX()))) + 180;
-		}
-		if(angle <= 0) {
-			angle += 360;
-		}
-
-		float rotAngle = 360 - rotation;
-		if(rotAngle >= 360) rotAngle -= 360;
-		
-		float oppAngle = 180 + angle;
-		if(oppAngle > 360) oppAngle -= 360;
-		
-		if(angle >= 180) {
-			if(rotAngle < angle && rotAngle > oppAngle) {
-				rotation -= tpf * 150;
-			} else {
-				rotation += tpf * 150;
+	public void update(float tpf) {
+		if(!fleeing && !flinching) {
+			tmrTargetChange += tpf;
+			if(tmrTargetChange > CONST_TARGET_CHANGE_TIME) {
+				tmrTargetChange = 0;
+				updateTarget.set((float)Math.random() * 20 + 2,0,(float)Math.random() * 60 - 30);
 			}
-		} else {
-			if(rotAngle < angle && rotAngle < oppAngle) {
-				rotation -= tpf * 150;
+		} else if(flinching) {
+			tmrFlinch += tpf;
+			direction.x = flinchVectorX;
+			direction.z = flinchVectorZ;
+			if(tmrFlinch > flinchTime) {
+				flinching = false;
+				fleeing = true;
+				moveSpeed = 0.4f;
+			}
+		} else if(fleeing) {
+			updateTarget.set(flinchVectorX * 1000, 0, flinchVectorZ * 1000);
+		}
+		if(!flinching) {
+			Vector3 toTargetVec = updateTarget.cpy().sub(position);
+			
+			target.setPosition(toTargetVec.nor());
+	
+			float angle = 0;
+			if(target.getX() >= 0) { 
+				angle = (float)(Math.toDegrees(Math.atan(target.getZ()/target.getX())));
 			} else {
-				rotation += tpf * 150;
+				angle = (float)(Math.toDegrees(Math.atan(target.getZ()/target.getX()))) + 180;
+			}
+			if(angle <= 0) {
+				angle += 360;
+			}
+			float rotAngle = 360 - rotation;
+			if(rotAngle >= 360) rotAngle -= 360;
+	
+			float distLeft = 0;
+			float distRight = 0;
+			if(rotAngle < angle) {
+				distLeft = rotAngle - angle + 360;
+				distRight = angle - rotAngle;
+			} else {
+				distLeft = rotAngle - angle;
+				distRight = angle - rotAngle + 360; 
+			}
+	
+			if(distLeft > distRight) {
+				rotation -= tpf * 60;
+			} else {
+				rotation += tpf * 60;
+			}
+	
+			direction.set((float)Math.cos(rotation / 360 * Math.PI * 2), 0, -(float)Math.sin(rotation / 360 * Math.PI * 2));
+	
+			if(direction.x > 0) {
+				rotation = (float)(Math.toDegrees(Math.atan(direction.z / -direction.x)));
+			} else {
+				rotation = (float)(Math.toDegrees(Math.atan(direction.z / -direction.x) + (Math.PI)));
 			}
 		}
-		//rotation = (float)Math.tan(target.getX()/target.getZ());
-		//rotation += 0.5f;
-		direction.set((float)Math.cos(rotation / 360 * Math.PI * 2) * CONST_SPEED, 0, -(float)Math.sin(rotation / 360 * Math.PI * 2) * CONST_SPEED);
-		//direction.set(toTargetVec).nor().mul(0.1f);
-		if(direction.x > 0) {
-			rotation = (float)(Math.toDegrees(Math.atan(direction.z / -direction.x)));
-		} else {
-			rotation = (float)(Math.toDegrees(Math.atan(direction.z / -direction.x) + (Math.PI)));
-		}
-		//move(direction);
+		move(direction.x * moveSpeed, 0, direction.z * moveSpeed);
 		
 		tmrFrame += tpf;
 		if(tmrFrame > CONST_FRAMERATE) {
@@ -113,5 +151,17 @@ public class EnemyNode extends Node {
 	
 	public ANIM getCurrentAnimation() {
 		return varCurAnimation;
+	}
+	public void onHit(Vector3 attackVec) {
+		flinching = true;
+		flinchVectorX = attackVec.x;
+		flinchVectorZ = attackVec.z;
+		moveSpeed = 3;
+	}
+	public boolean isFleeing() {
+		return fleeing;
+	}
+	public boolean isFlinching() {
+		return flinching;
 	}
 }

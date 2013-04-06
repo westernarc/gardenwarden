@@ -1,0 +1,540 @@
+package com.westernarc.gardenwarden;
+
+import java.util.ArrayList;
+
+import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL10;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
+import com.badlogic.gdx.graphics.g3d.decals.Decal;
+import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
+import com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry;
+import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.materials.Material;
+import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
+import com.westernarc.gardenwarden.Graphics.EffectDecal;
+import com.westernarc.gardenwarden.Graphics.SpriteFade;
+import com.westernarc.gardenwarden.Node.EnemyNode;
+import com.westernarc.gardenwarden.Node.Node;
+import com.westernarc.gardenwarden.Node.PlayerNode;
+
+public class GardenWarden implements ApplicationListener {
+	private float CONST_SCREEN_WIDTH;
+	private float CONST_SCREEN_HEIGHT;
+	
+	private static final float CONST_BOUND_LEFT = -40;
+	private static final float CONST_BOUND_RIGHT = 40;
+	private static final float CONST_BOUND_UP = 50;
+	private static final float CONST_BOUND_DOWN = -30;
+	
+	private OrthographicCamera cam2d;
+	private PerspectiveCamera cam3d;
+	private SpriteBatch batch2d;
+	private DecalBatch batch3d;
+	SpriteFade sprTitle;
+	
+	private static final int CONST_GRASSDECAL_MAX = 60;
+	private static final int CONST_FLOWERDECAL_MAX = 20;
+	//Foliage decals
+	Decal[] dclGrass;
+	Decal[] dclFlower;
+	
+	private static final int CONST_VEGGIEDECAL_MAX = 10;
+	private static final int CONST_GROUNDMOUND_MAX = 6;
+	//Veggie decals
+	Decal[] dclGroundMound;
+	Decal[] dclWatermelon;
+	Decal[] dclSquash;
+	Decal[] dclScallion;
+	Decal[] dclTomato;
+	Decal[] dclPumpkin;
+	Decal[] dclCarrot;
+	//Store whether or not vegetables have died here.
+	//Length is the total amount of veggies.
+	boolean[] varVeggiesDead;
+
+	float camAngle;
+	float camDistance;
+	float camHeight;
+	
+	BitmapFont fntUi;
+	private float varUiAlpha;
+	private float varDeathTextAlpha;
+	
+	private float tmrDeadState;
+	private float tmrScoreState;
+	
+	private static final float CONST_TMRDEADSTATE_MAX = 5;
+	//Game flow:
+	//Splash Screen: 
+	private enum GAMESTATE {
+		splash, title, play, dead, score
+	}
+	private GAMESTATE varGameState;
+	
+	PlayerNode nodPlayer;
+	Node nodGarden;
+	EnemyNode nodEnemy;
+	ArrayList<EnemyNode> lstEnemies;
+	
+	//Game Variables
+	//Wave number
+	int varWave;
+	//int 
+	
+	SpriteFade sprResetFilter;
+	
+	@Override
+	public void create() {
+		CONST_SCREEN_WIDTH = Gdx.graphics.getWidth();
+		CONST_SCREEN_HEIGHT = Gdx.graphics.getHeight();
+		
+		cam2d = new OrthographicCamera(CONST_SCREEN_WIDTH, CONST_SCREEN_HEIGHT);
+		batch2d = new SpriteBatch();
+		
+		cam3d = new PerspectiveCamera(67, CONST_SCREEN_WIDTH, CONST_SCREEN_HEIGHT);
+		batch3d = new DecalBatch();
+		//batch3d.setGroupStrategy(new CameraGroupStrategy(cam3d));
+		
+		camDistance = 20;
+		camHeight = 20;
+		camAngle = (float)-Math.PI/2f;
+		cam3d.position.set((float)Math.sin(camAngle) * camDistance, camHeight, (float)Math.cos(camAngle) * camDistance);
+		cam3d.lookAt(0, 70, 0);
+		cam3d.far = 2000;
+		
+		nodPlayer = new PlayerNode();
+		nodGarden = new Node();
+		nodGarden.setModel(ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/garden.g3dt")));
+		nodGarden.setMaterial(new Material("mat", new TextureAttribute(new Texture(Gdx.files.internal("textures/gardentex.png")), 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse)));
+		
+		TextureRegion grassTex = new TextureRegion(new Texture(Gdx.files.internal("textures/grass.png")));
+		TextureRegion flowerTex = new TextureRegion(new Texture(Gdx.files.internal("textures/flower.png")));
+		dclGrass = new Decal[CONST_GRASSDECAL_MAX];
+		dclFlower = new Decal[CONST_FLOWERDECAL_MAX];
+		for(int i = 0; i < CONST_GRASSDECAL_MAX; i++) {
+			dclGrass[i] = Decal.newDecal(grassTex, true);
+			dclGrass[i].rotateY(90);
+			dclGrass[i].rotateX(50);
+			float randomX = (float)Math.random() * 120 - 30;
+			float randomY = (float)Math.random() * 120 - 60;
+			if(Math.abs(randomX) > 50 || Math.abs(randomY) > 30) {
+				dclGrass[i].setScale(0.07f);
+				dclGrass[i].setPosition(randomX, 1.4f, randomY);
+			} else {
+				dclGrass[i].setScale(0.04f);
+				dclGrass[i].setPosition(randomX, 1f, randomY);
+			}
+		}
+		for(int i = 0; i < CONST_FLOWERDECAL_MAX; i++) {
+			dclFlower[i] = Decal.newDecal(flowerTex, true);
+			dclFlower[i].rotateY(90);
+			dclFlower[i].rotateX(50);
+			dclFlower[i].setScale(0.05f);
+			dclFlower[i].setPosition((float)Math.random() * 120 - 30, 1, (float)Math.random() * 120 - 60);
+		}
+		
+		TextureRegion watermelonTex = new TextureRegion(new Texture(Gdx.files.internal("textures/watermelon.png")));
+		dclWatermelon = new Decal[CONST_VEGGIEDECAL_MAX];
+		for(int i = 0; i < CONST_VEGGIEDECAL_MAX; i++) {
+			dclWatermelon[i] = Decal.newDecal(watermelonTex, true);
+			dclWatermelon[i].rotateY(90);
+			dclWatermelon[i].rotateX(50);
+			dclWatermelon[i].setScale(0.04f);
+			dclWatermelon[i].setPosition(( ((float)i / CONST_VEGGIEDECAL_MAX) * 25) + 4, 1, 2.4f);
+		}
+		
+		TextureRegion tomatoTex = new TextureRegion(new Texture(Gdx.files.internal("textures/tomato.png")));
+		dclTomato = new Decal[CONST_VEGGIEDECAL_MAX];
+		for(int i = 0; i < CONST_VEGGIEDECAL_MAX; i++) {
+			dclTomato[i] = Decal.newDecal(tomatoTex, true);
+			dclTomato[i].rotateY(90);
+			dclTomato[i].rotateX(50);
+			dclTomato[i].setScale(0.04f);
+			dclTomato[i].setPosition(( ((float)i / CONST_VEGGIEDECAL_MAX) * 25) + 4, 1, -7.4f);
+		}
+		
+		TextureRegion squashTex = new TextureRegion(new Texture(Gdx.files.internal("textures/squash.png")));
+		dclSquash = new Decal[CONST_VEGGIEDECAL_MAX];
+		for(int i = 0; i < CONST_VEGGIEDECAL_MAX; i++) {
+			dclSquash[i] = Decal.newDecal(squashTex, true);
+			dclSquash[i].rotateY(90);
+			dclSquash[i].rotateX(50);
+			dclSquash[i].setScale(0.04f);
+			dclSquash[i].setPosition(( ((float)i / CONST_VEGGIEDECAL_MAX) * 25) + 4, 1.2f, 20f);
+		}
+		
+		TextureRegion carrotTex = new TextureRegion(new Texture(Gdx.files.internal("textures/carrot.png")));
+		dclCarrot = new Decal[CONST_VEGGIEDECAL_MAX];
+		for(int i = 0; i < CONST_VEGGIEDECAL_MAX; i++) {
+			dclCarrot[i] = Decal.newDecal(carrotTex, true);
+			dclCarrot[i].rotateY(90);
+			dclCarrot[i].rotateX(50);
+			dclCarrot[i].setScale(0.04f);
+			dclCarrot[i].setPosition(( ((float)i / CONST_VEGGIEDECAL_MAX) * 25) + 4, 1.3f, -25.5f);
+		}
+		
+		TextureRegion scallionTex = new TextureRegion(new Texture(Gdx.files.internal("textures/scallion.png")));
+		dclScallion = new Decal[CONST_VEGGIEDECAL_MAX];
+		for(int i = 0; i < CONST_VEGGIEDECAL_MAX; i++) {
+			dclScallion[i] = Decal.newDecal(scallionTex, true);
+			dclScallion[i].rotateY(90);
+			dclScallion[i].rotateX(50);
+			dclScallion[i].setScale(0.04f);
+			dclScallion[i].setPosition(( ((float)i / CONST_VEGGIEDECAL_MAX) * 25) + 4, 1, 11.5f);
+		}
+		
+		TextureRegion pumpkinTex = new TextureRegion(new Texture(Gdx.files.internal("textures/pumpkin.png")));
+		dclPumpkin = new Decal[CONST_VEGGIEDECAL_MAX];
+		for(int i = 0; i < CONST_VEGGIEDECAL_MAX; i++) {
+			dclPumpkin[i] = Decal.newDecal(pumpkinTex, true);
+			dclPumpkin[i].rotateY(90);
+			dclPumpkin[i].rotateX(50);
+			dclPumpkin[i].setScale(0.04f);
+			dclPumpkin[i].setPosition(( ((float)i / CONST_VEGGIEDECAL_MAX) * 25) + 4, 1, -17.5f);
+		}
+		
+		sprTitle = new SpriteFade(new Texture(Gdx.files.internal("textures/title.png")));
+		sprTitle.setPosition(-sprTitle.getWidth()/2, -sprTitle.getHeight()/2);
+		sprTitle.setScale(CONST_SCREEN_HEIGHT / sprTitle.getHeight());
+		sprTitle.fade(1, false);
+		
+		fntUi = new BitmapFont(Gdx.files.internal("text/BimboJVE_24.fnt"), false);
+		varGameState = GAMESTATE.title;
+		
+		reinitialize();
+	}
+	
+	private void reinitialize() {
+		varUiAlpha = 0;
+		varDeathTextAlpha = 0;
+		nodEnemy = new EnemyNode();
+		lstEnemies = new ArrayList<EnemyNode>();
+		lstEnemies.add(nodEnemy);
+		
+		tmrDeadState = 0;
+		tmrScoreState = 0;
+		
+		varVeggiesDead = new boolean[CONST_VEGGIEDECAL_MAX * CONST_GROUNDMOUND_MAX];
+		//Reinitialize veggie-dead boolean array
+		for(int i = 0; i < varVeggiesDead.length; i++) {
+			varVeggiesDead[i] = false;
+		}
+	}
+
+	//Spawns waves
+	private void updateWave() {
+		if(lstEnemies.size() < (varWave + 3)) {
+			nodEnemy = new EnemyNode();
+			nodEnemy.setPosition(60,0,0);
+			lstEnemies.add(nodEnemy);
+		}
+	}
+	
+	@Override
+	public void dispose() {
+		batch2d.dispose();
+	}
+
+	@Override
+	public void render() {
+		float tpf = Gdx.graphics.getDeltaTime();
+		
+		Gdx.gl10.glClearColor(0.51f, 0.76f, 0.88f, 1);
+		
+		Gdx.gl10.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+		Gdx.gl10.glEnable(GL10.GL_DEPTH_TEST);
+		Gdx.gl10.glEnable(GL10.GL_TEXTURE_2D);
+		Gdx.gl10.glEnable(GL10.GL_COLOR_MATERIAL);
+		
+		Gdx.gl10.glPushMatrix();
+		Gdx.gl10.glTranslatef(nodPlayer.getX(), nodPlayer.getY(), nodPlayer.getZ());
+		Gdx.gl10.glRotatef(nodPlayer.getRotation(), 0, 1, 0);
+		nodPlayer.render();
+		Gdx.gl10.glPopMatrix();
+		
+		//Draw enemies
+		for(EnemyNode curNodEnemy : lstEnemies) {
+			Gdx.gl10.glPushMatrix();
+			Gdx.gl10.glTranslatef(curNodEnemy.getX(), curNodEnemy.getY(), curNodEnemy.getZ());
+			Gdx.gl10.glRotatef(curNodEnemy.getRotation(), 0, 1, 0);
+			curNodEnemy.render();
+			Gdx.gl10.glPopMatrix();
+		}
+
+		nodGarden.render();
+		
+		for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+			batch3d.add(dclWatermelon[i]);
+		}
+		for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+			batch3d.add(dclTomato[i]);
+		}
+		for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+			batch3d.add(dclSquash[i]);
+		}
+		for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+			batch3d.add(dclCarrot[i]);
+		}
+		for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+			batch3d.add(dclScallion[i]);
+		}
+		for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+			batch3d.add(dclPumpkin[i]);
+		}
+		for(int i = 0; i < CONST_GRASSDECAL_MAX; i++) {
+			batch3d.add(dclGrass[i]);
+		}
+		for(int i = 0; i < CONST_FLOWERDECAL_MAX; i++) {
+			batch3d.add(dclFlower[i]);
+		}
+		if(nodPlayer.getEffect().isPlaying()) {
+			nodPlayer.getEffect().update(tpf);
+			batch3d.add(nodPlayer.getEffect().getDecal());
+		}
+		batch3d.flush();
+		
+		Gdx.gl10.glDisable(GL10.GL_DEPTH_TEST);
+		Gdx.gl10.glDisable(GL10.GL_TEXTURE_2D);
+		Gdx.gl10.glDisable(GL10.GL_COLOR_MATERIAL);
+		
+		//Draw 2d
+		drawUi(tpf);
+		
+		handleInput(tpf);
+		update(tpf);
+	}
+	private void update(float tpf) {
+		
+		cam3d.position.set(-camDistance + nodPlayer.getX(), camHeight, nodPlayer.getPosition().z);
+		cam3d.lookAt(nodPlayer.getX(), 0, nodPlayer.getZ());
+		cam3d.update(true);
+		cam3d.apply(Gdx.gl10);
+		
+		switch(varGameState) {
+		case dead:
+			tmrDeadState += tpf;
+			if(tmrDeadState <= CONST_TMRDEADSTATE_MAX - 1) {
+				if(varDeathTextAlpha < 1) {
+					varDeathTextAlpha += tpf;
+					if(varDeathTextAlpha > 1) {
+						varDeathTextAlpha = 1;
+					}
+				}
+			} else if(tmrDeadState > CONST_TMRDEADSTATE_MAX - 1){
+				if(varDeathTextAlpha > 0) {
+					varDeathTextAlpha -= tpf;
+					if(varDeathTextAlpha < 0) {
+						varDeathTextAlpha = 0;
+					}
+				}
+			} else if(tmrDeadState >= CONST_TMRDEADSTATE_MAX) {
+				varGameState = GAMESTATE.score;
+				varDeathTextAlpha = 0;
+			}
+			nodPlayer.update(tpf);
+			break;
+		case play:
+			nodPlayer.update(tpf);
+			
+			//Check player bounds
+			if(nodPlayer.getZ() < CONST_BOUND_LEFT) nodPlayer.setZ(CONST_BOUND_LEFT);
+			if(nodPlayer.getZ() > CONST_BOUND_RIGHT) nodPlayer.setZ(CONST_BOUND_RIGHT);
+			if(nodPlayer.getX() < CONST_BOUND_DOWN) nodPlayer.setX(CONST_BOUND_DOWN);
+			if(nodPlayer.getX() > CONST_BOUND_UP) nodPlayer.setX(CONST_BOUND_UP);
+			
+			//Update field			
+			updatePlants(tpf);
+			for(int i = 0; i < 3; i++) {
+				//dclWatermelon[i].setScale(dclWatermelon[i].getScaleX() * 0.99f);	
+			}
+			
+			updateWave();
+			break;
+		case score:
+			tmrScoreState += tpf;
+			break;
+		case splash:
+			break;
+		case title:
+			sprTitle.fade(tpf, true);
+			break;
+		}
+	}
+	
+	private void updatePlants(float tpf) {
+		//Go through each enemy.  For each enemy, see if they are close to each plant.
+		//If the enemy is near a plant, scale down the plant.
+		
+		//Also check whether or not enemy is attacking players when looping through the enemies.
+		for(EnemyNode enode : lstEnemies){
+			int rad = 4;
+			float enemyX = enode.getX();
+			float enemyZ = enode.getZ();
+			//Check carrots, pumpkins, tomatoes, watermelon, scallion, and squash
+			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+				if(Math.abs(enemyX - dclWatermelon[i].getX()) < rad && Math.abs(enemyZ - dclWatermelon[i].getZ()) < rad) {
+					dclWatermelon[i].setScale(dclWatermelon[i].getScaleX() * 0.99f);
+				}
+			}
+			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+				if(Math.abs(enemyX - dclTomato[i].getX()) < rad && Math.abs(enemyZ - dclTomato[i].getZ()) < rad) {
+					dclTomato[i].setScale(dclTomato[i].getScaleX() * 0.99f);
+				}
+			}
+			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+				if(Math.abs(enemyX - dclSquash[i].getX()) < rad && Math.abs(enemyZ - dclSquash[i].getZ()) < rad) {
+					dclSquash[i].setScale(dclSquash[i].getScaleX() * 0.99f);
+				}
+			}
+			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+				if(Math.abs(enemyX - dclCarrot[i].getX()) < rad && Math.abs(enemyZ - dclCarrot[i].getZ()) < rad) {
+					dclCarrot[i].setScale(dclCarrot[i].getScaleX() * 0.99f);
+				}
+			}
+			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+				if(Math.abs(enemyX - dclScallion[i].getX()) < rad && Math.abs(enemyZ - dclScallion[i].getZ()) < rad) {
+					dclScallion[i].setScale(dclScallion[i].getScaleX() * 0.99f);
+				}
+			}
+			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
+				if(Math.abs(enemyX - dclPumpkin[i].getX()) < rad && Math.abs(enemyZ - dclPumpkin[i].getZ()) < rad) {
+					dclPumpkin[i].setScale(dclPumpkin[i].getScaleX() * 0.99f);
+				}
+			}
+			
+			
+			//Now, check if enemies are hit.
+			if(nodPlayer.isAttacking()) {
+				//Calculate where player is attacking
+				float playerAttackedX = nodPlayer.getPosition().x + nodPlayer.getDirection().x * 3;
+				float playerAttackedZ = nodPlayer.getPosition().z + nodPlayer.getDirection().z * 3;
+				
+				if(Math.abs(enemyX - playerAttackedX) < rad * 2 && Math.abs(enemyZ - playerAttackedZ) < rad * 2) {
+					//enode.move(nodPlayer.getDirection().x * 10, 0, nodPlayer.getDirection().z * 10);
+					enode.onHit(nodPlayer.getDirection());
+				}
+			}
+		}
+	}
+	private void handleInput(float tpf) {
+		switch(varGameState) {
+		case play:
+			if(Gdx.input.isKeyPressed(Keys.ANY_KEY)) {
+				if(!Gdx.input.isKeyPressed(Keys.E) && !Gdx.input.isKeyPressed(Keys.S) && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3) {
+					nodPlayer.setAnim(PlayerNode.ANIM.walk);
+				}
+			} else {
+				nodPlayer.setAnim(PlayerNode.ANIM.stand);
+			}
+			if(Gdx.input.isKeyPressed(Keys.A)){
+				if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3){ 
+					nodPlayer.rotate(5);
+				}
+			}
+			if(Gdx.input.isKeyPressed(Keys.S)){
+				if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3){ 
+					nodPlayer.setAnim(PlayerNode.ANIM.roll);
+				}
+			}
+			if(Gdx.input.isKeyPressed(Keys.D)){
+				if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3){ 
+					nodPlayer.rotate(-5);
+				}
+			}
+			if(Gdx.input.isKeyPressed(Keys.W)){
+				if(nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.roll && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack2 && nodPlayer.getCurrentAnimation() != PlayerNode.ANIM.attack3){ 
+					nodPlayer.move(nodPlayer.getDirection());
+				}
+			}
+			if(Gdx.input.isKeyPressed(Keys.R)){
+				nodPlayer.setAnim(PlayerNode.ANIM.walk);
+			}
+			if(Gdx.input.isKeyPressed(Keys.E)){
+				nodPlayer.setAnim(PlayerNode.ANIM.attack);
+			}
+			if(Gdx.input.isKeyPressed(Keys.Y)) {
+				varGameState = GAMESTATE.dead;
+			}
+			break;
+		case splash:
+			break;
+		case title:
+			if(Gdx.input.isTouched()) {
+				varGameState = GAMESTATE.play;
+			}
+			break;
+		case dead:
+			break;
+		case score:
+			if(Gdx.input.isTouched()) {
+				//Restart the game
+				varGameState = GAMESTATE.play;
+			}
+			break;
+		}
+	}
+	
+	private void drawUi(float tpf) {
+		batch2d.setProjectionMatrix(cam2d.combined);
+		batch2d.begin();
+		
+		sprTitle.fade(tpf * 2, (varGameState == GAMESTATE.title));
+		sprTitle.draw(batch2d);
+		
+		if(varGameState == GAMESTATE.play){
+			if(varUiAlpha < 1) {
+				varUiAlpha += tpf;
+			}
+			if(varUiAlpha > 1) {
+				varUiAlpha = 1;
+			}
+		} else {
+			varUiAlpha -= tpf;
+			if(varUiAlpha < 0) {
+				varUiAlpha = 0;
+			}
+		}
+		fntUi.setColor(1,1,1,varUiAlpha);
+		fntUi.setScale(1);
+		fntUi.draw(batch2d, "Wave 32", -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
+		fntUi.setScale(2);
+		fntUi.draw(batch2d, "54%", -fntUi.getBounds("54%").width/2f, CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/4);
+		fntUi.setScale(1);
+		fntUi.draw(batch2d, "38:83", CONST_SCREEN_WIDTH/2 - fntUi.getBounds("38:83").width - fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
+		
+		//Draw death text
+		
+		if(varGameState == GAMESTATE.dead){
+			fntUi.setColor(1,1,1,varDeathTextAlpha);
+			fntUi.setScale(3);
+			fntUi.draw(batch2d, "Garden Lost!", -fntUi.getBounds("Garden Lost!").width/2f, 0);
+			fntUi.setScale(1);
+		}
+		batch2d.end();
+	}
+	@Override
+	public void resize(int width, int height) {
+	}
+
+	@Override
+	public void pause() {
+	}
+
+	@Override
+	public void resume() {
+	}
+}

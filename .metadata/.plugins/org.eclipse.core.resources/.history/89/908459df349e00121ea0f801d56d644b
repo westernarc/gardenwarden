@@ -1,0 +1,23 @@
+package com.westernarc.gardenwarden.Graphics;
+
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.decals.Decal;
+
+public class EffectDecal {
+	Decal decal;
+	
+	int numOfFrames;
+	float framerate;
+	int curFrame;
+	
+	TextureRegion frames;
+	public EffectDecal(int n, int fr) {
+		numOfFrames = n;
+		framerate = fr;
+	}
+	
+	public void setAnimationFiles(TextureRegion setframe) {
+		frames = setframe;
+	}
+	
+}

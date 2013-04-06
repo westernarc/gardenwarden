@@ -35,6 +35,9 @@ public class Node {
 	public void setPosition(Vector3 v) {
 		position.set(v.x,v.y,v.z);
 	}
+	public void setPosition(float x, float y, float z) {
+		position.set(x,y,z);
+	}
 	public Vector3 getPosition() {
 		return position;
 	}
@@ -67,5 +70,8 @@ public class Node {
 	}
 	public void move(Vector3 m) {
 		position.add(m);
+	}
+	public void move(float x, float y, float z) {
+		position.add(x,y,z);
 	}
 }

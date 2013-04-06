@@ -1,0 +1,7 @@
+package com.westernarc.gardenwarden.Graphics;
+
+import Decal;
+
+public class EffectDecal extends Decal {
+
+}

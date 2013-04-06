@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g3d.materials.Material;
 import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.still.StillModel;
 import com.badlogic.gdx.math.Vector3;
+import com.westernarc.gardenwarden.Graphics.EffectDecal;
 
 public class PlayerNode extends Node {
 	private StillModel framesWalk[];
@@ -32,6 +33,10 @@ public class PlayerNode extends Node {
 	
 	private Vector3 direction;
 	public static final float CONST_SPEED = 0.2f;
+	
+	EffectDecal attackEffect;
+	
+	private boolean attacking;
 	
 	public PlayerNode() {
 		texture = new Texture(Gdx.files.internal("textures/playergardentex.png"));
@@ -82,8 +87,12 @@ public class PlayerNode extends Node {
 		flgWalkToStand = false;
 		flgAttack2 = false;
 		flgAttack3 = false;
-		
+		attacking = false;
 		direction = new Vector3();
+		
+		attackEffect = new EffectDecal(7, 1/60f, 128, 128);
+		attackEffect.setAnimationFiles("textures/effect/slashw");
+		attackEffect.setRotationX(90);
 	}
 	
 	public void update(float tpf) {
@@ -132,6 +141,10 @@ public class PlayerNode extends Node {
 
 		switch(varCurAnimation) {
 		case attack:
+			if(cntCurFrame == 2) {
+				attackEffect.play();
+				attacking = true;
+			}
 			if(cntCurFrame == 15) {
 				//When the attack is over, branch.
 				cntCurFrame = 1;
@@ -143,6 +156,7 @@ public class PlayerNode extends Node {
 				} else {
 					varCurAnimation = ANIM.stand;
 					setModel(framesStand[cntCurFrame]);
+					attacking = false;
 				}
 			} else {
 				//During attacks, move forward for the first 5 frames
@@ -153,6 +167,10 @@ public class PlayerNode extends Node {
 			}
 			break;
 		case attack2:
+			if(cntCurFrame == 5) {
+				attackEffect.play();
+				attacking = true;
+			}
 			if(cntCurFrame == 15) {
 				cntCurFrame = 1;
 				if(flgAttack3) {
@@ -162,6 +180,7 @@ public class PlayerNode extends Node {
 				} else {
 					varCurAnimation = ANIM.standL;
 					setModel(framesStandL[cntCurFrame]);
+					attacking = false;
 				}
 			} else {
 				//During attacks, move forward for the first 5 frames
@@ -172,10 +191,15 @@ public class PlayerNode extends Node {
 			}
 			break;
 		case attack3:
+			if(cntCurFrame == 6) {
+				attackEffect.play();
+				attacking = true;
+			}
 			if(cntCurFrame == 20) {
 				cntCurFrame = 1;
 				varCurAnimation = ANIM.stand;
 				setModel(framesStand[cntCurFrame]);
+				attacking = false;
 			} else {
 				if(cntCurFrame < 9 && cntCurFrame > 3) {
 					move(direction.cpy().mul(1.5f));
@@ -221,6 +245,26 @@ public class PlayerNode extends Node {
 		default:
 			break;
 
+		}
+		
+		if(attackEffect.isPlaying()) {
+			
+			if(varCurAnimation == ANIM.attack) {
+				attackEffect.setRotationY(getRotation() - 20);
+				attackEffect.rotateX(-90);
+				attackEffect.setPosition(getX() + getDirection().x * 15, 2, getZ() + getDirection().z * 15);
+				attackEffect.setScale(0.09f);
+			} else if(varCurAnimation == PlayerNode.ANIM.attack2){
+				attackEffect.setRotationY(getRotation());
+				attackEffect.rotateX(90);
+				attackEffect.setPosition(getX() + getDirection().x * 10, 2, getZ() + getDirection().z * 10);
+				attackEffect.setScale(0.12f);
+			} else {
+				attackEffect.setRotationY(getRotation());
+				attackEffect.rotateX(180);
+				attackEffect.setPosition(getX() + getDirection().x * 13, 5, getZ() + getDirection().z * 11);
+				attackEffect.setScale(0.1f);
+			}
 		}
 	}
 	
@@ -273,5 +317,12 @@ public class PlayerNode extends Node {
 	
 	public ANIM getCurrentAnimation() {
 		return varCurAnimation;
+	}
+	
+	public EffectDecal getEffect() {
+		return attackEffect;
+	}
+	public boolean isAttacking() {
+		return attacking;
 	}
 }

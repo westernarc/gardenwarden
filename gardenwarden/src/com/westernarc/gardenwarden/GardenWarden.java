@@ -15,6 +15,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.Decal;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry;
@@ -24,6 +25,7 @@ import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.westernarc.gardenwarden.Graphics.EffectDecal;
 import com.westernarc.gardenwarden.Graphics.SpriteFade;
 import com.westernarc.gardenwarden.Node.EnemyNode;
 import com.westernarc.gardenwarden.Node.Node;
@@ -63,7 +65,7 @@ public class GardenWarden implements ApplicationListener {
 	//Store whether or not vegetables have died here.
 	//Length is the total amount of veggies.
 	boolean[] varVeggiesDead;
-	
+
 	float camAngle;
 	float camDistance;
 	float camHeight;
@@ -85,8 +87,18 @@ public class GardenWarden implements ApplicationListener {
 	
 	PlayerNode nodPlayer;
 	Node nodGarden;
-	EnemyNode nodEnemy;
 	ArrayList<EnemyNode> lstEnemies;
+	
+	//Game Variables
+	//Wave number
+	int varWave;
+	int remainingInWave;
+	boolean flgWaveEnd;
+	private static final float CONST_WAVEUPDATERATE = 1/20f;
+	private float tmrWaveUpdate;
+	//int 
+	
+	SpriteFade sprResetFilter;
 	
 	@Override
 	public void create() {
@@ -98,6 +110,7 @@ public class GardenWarden implements ApplicationListener {
 		
 		cam3d = new PerspectiveCamera(67, CONST_SCREEN_WIDTH, CONST_SCREEN_HEIGHT);
 		batch3d = new DecalBatch();
+		//batch3d.setGroupStrategy(new CameraGroupStrategy(cam3d));
 		
 		camDistance = 20;
 		camHeight = 20;
@@ -211,9 +224,7 @@ public class GardenWarden implements ApplicationListener {
 	private void reinitialize() {
 		varUiAlpha = 0;
 		varDeathTextAlpha = 0;
-		nodEnemy = new EnemyNode();
 		lstEnemies = new ArrayList<EnemyNode>();
-		lstEnemies.add(nodEnemy);
 		
 		tmrDeadState = 0;
 		tmrScoreState = 0;
@@ -223,8 +234,31 @@ public class GardenWarden implements ApplicationListener {
 		for(int i = 0; i < varVeggiesDead.length; i++) {
 			varVeggiesDead[i] = false;
 		}
+		remainingInWave = 0;
+		flgWaveEnd = true;
+		tmrWaveUpdate = 0;
 	}
 
+	//Spawns waves
+	private void updateWave() {
+		if(lstEnemies.size() < (varWave + 3) && flgWaveEnd) {
+			remainingInWave++;
+			EnemyNode nodEnemy = new EnemyNode();
+			//Random from left, right or top
+			double random = Math.random();
+			if(random < 0.33) {
+				nodEnemy.setPosition(70, 0, (float)Math.random() * 60 - 30);
+			} else if(random < 0.66) {
+				nodEnemy.setPosition((float)Math.random() * 60 - 30, 0, 60);
+			} else {
+				nodEnemy.setPosition((float)Math.random() * 60 - 30, 0, -60);
+			}
+			lstEnemies.add(nodEnemy);
+		} else {
+			flgWaveEnd = false;
+		}
+	}
+	
 	@Override
 	public void dispose() {
 		batch2d.dispose();
@@ -255,15 +289,9 @@ public class GardenWarden implements ApplicationListener {
 			curNodEnemy.render();
 			Gdx.gl10.glPopMatrix();
 		}
-		
+
 		nodGarden.render();
 		
-		for(int i = 0; i < CONST_GRASSDECAL_MAX; i++) {
-			batch3d.add(dclGrass[i]);
-		}
-		for(int i = 0; i < CONST_FLOWERDECAL_MAX; i++) {
-			batch3d.add(dclFlower[i]);
-		}
 		for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
 			batch3d.add(dclWatermelon[i]);
 		}
@@ -281,6 +309,16 @@ public class GardenWarden implements ApplicationListener {
 		}
 		for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
 			batch3d.add(dclPumpkin[i]);
+		}
+		for(int i = 0; i < CONST_GRASSDECAL_MAX; i++) {
+			batch3d.add(dclGrass[i]);
+		}
+		for(int i = 0; i < CONST_FLOWERDECAL_MAX; i++) {
+			batch3d.add(dclFlower[i]);
+		}
+		if(nodPlayer.getEffect().isPlaying()) {
+			nodPlayer.getEffect().update(tpf);
+			batch3d.add(nodPlayer.getEffect().getDecal());
 		}
 		batch3d.flush();
 		
@@ -333,13 +371,17 @@ public class GardenWarden implements ApplicationListener {
 			if(nodPlayer.getX() < CONST_BOUND_DOWN) nodPlayer.setX(CONST_BOUND_DOWN);
 			if(nodPlayer.getX() > CONST_BOUND_UP) nodPlayer.setX(CONST_BOUND_UP);
 			
-			nodEnemy.update(tpf, nodPlayer);
-			
+			//Update field			
 			updatePlants(tpf);
 			for(int i = 0; i < 3; i++) {
 				//dclWatermelon[i].setScale(dclWatermelon[i].getScaleX() * 0.99f);	
 			}
 			
+			tmrWaveUpdate += tpf;
+			if(tmrWaveUpdate > CONST_WAVEUPDATERATE) {
+				tmrWaveUpdate = 0;
+				updateWave();
+			}
 			break;
 		case score:
 			tmrScoreState += tpf;
@@ -355,36 +397,67 @@ public class GardenWarden implements ApplicationListener {
 	private void updatePlants(float tpf) {
 		//Go through each enemy.  For each enemy, see if they are close to each plant.
 		//If the enemy is near a plant, scale down the plant.
+		
+		//Also check whether or not enemy is attacking players when looping through the enemies.
+		flgWaveEnd = true;
 		for(EnemyNode enode : lstEnemies){
+			if(flgWaveEnd || Math.abs(enode.getX()) < 90 || Math.abs(enode.getZ()) < 90) {
+				flgWaveEnd = false;
+			}
+			
+			//Dont update enemies that are out of bounds
+			enode.update(tpf);
+			int rad = 4;
+			float enemyX = enode.getX();
+			float enemyZ = enode.getZ();
 			//Check carrots, pumpkins, tomatoes, watermelon, scallion, and squash
 			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
-				if(Math.abs(enode.getX() - dclWatermelon[i].getX()) < 2 && Math.abs(enode.getZ() - dclWatermelon[i].getZ()) < 2) {
+				if(Math.abs(enemyX - dclWatermelon[i].getX()) < rad && Math.abs(enemyZ - dclWatermelon[i].getZ()) < rad) {
 					dclWatermelon[i].setScale(dclWatermelon[i].getScaleX() * 0.99f);
 				}
 			}
 			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
-				if(Math.abs(enode.getX() - dclTomato[i].getX()) < 2 && Math.abs(enode.getZ() - dclTomato[i].getZ()) < 2) {
+				if(Math.abs(enemyX - dclTomato[i].getX()) < rad && Math.abs(enemyZ - dclTomato[i].getZ()) < rad) {
 					dclTomato[i].setScale(dclTomato[i].getScaleX() * 0.99f);
 				}
 			}
 			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
-				if(Math.abs(enode.getX() - dclSquash[i].getX()) < 2 && Math.abs(enode.getZ() - dclSquash[i].getZ()) < 2) {
+				if(Math.abs(enemyX - dclSquash[i].getX()) < rad && Math.abs(enemyZ - dclSquash[i].getZ()) < rad) {
 					dclSquash[i].setScale(dclSquash[i].getScaleX() * 0.99f);
 				}
 			}
 			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
-				if(Math.abs(enode.getX() - dclCarrot[i].getX()) < 2 && Math.abs(enode.getZ() - dclCarrot[i].getZ()) < 2) {
+				if(Math.abs(enemyX - dclCarrot[i].getX()) < rad && Math.abs(enemyZ - dclCarrot[i].getZ()) < rad) {
 					dclCarrot[i].setScale(dclCarrot[i].getScaleX() * 0.99f);
 				}
 			}
 			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
-				if(Math.abs(enode.getX() - dclScallion[i].getX()) < 2 && Math.abs(enode.getZ() - dclScallion[i].getZ()) < 2) {
+				if(Math.abs(enemyX - dclScallion[i].getX()) < rad && Math.abs(enemyZ - dclScallion[i].getZ()) < rad) {
 					dclScallion[i].setScale(dclScallion[i].getScaleX() * 0.99f);
 				}
 			}
 			for(int i = CONST_VEGGIEDECAL_MAX - 1; i >= 0; i--) {
-				if(Math.abs(enode.getX() - dclPumpkin[i].getX()) < 2 && Math.abs(enode.getZ() - dclPumpkin[i].getZ()) < 2) {
+				if(Math.abs(enemyX - dclPumpkin[i].getX()) < rad && Math.abs(enemyZ - dclPumpkin[i].getZ()) < rad) {
 					dclPumpkin[i].setScale(dclPumpkin[i].getScaleX() * 0.99f);
+				}
+			}
+			
+			
+			//Now, check if enemies are hit.
+			if(nodPlayer.isAttacking()) {
+				//Calculate where player is attacking
+				float playerAttackedX = nodPlayer.getPosition().x + nodPlayer.getDirection().x * 3;
+				float playerAttackedZ = nodPlayer.getPosition().z + nodPlayer.getDirection().z * 3;
+				
+				if(Math.abs(enemyX - playerAttackedX) < rad * 2 && Math.abs(enemyZ - playerAttackedZ) < rad * 2) {
+					//enode.move(nodPlayer.getDirection().x * 10, 0, nodPlayer.getDirection().z * 10);
+					if(!enode.isFleeing() && !enode.isFlinching()) {
+						enode.onHit(nodPlayer.getDirection());
+						remainingInWave--;
+						if(remainingInWave <= 0) {
+							remainingInWave = 0;
+						}
+					}
 				}
 			}
 		}
@@ -439,6 +512,10 @@ public class GardenWarden implements ApplicationListener {
 		case dead:
 			break;
 		case score:
+			if(Gdx.input.isTouched()) {
+				//Restart the game
+				varGameState = GAMESTATE.play;
+			}
 			break;
 		}
 	}
@@ -465,11 +542,11 @@ public class GardenWarden implements ApplicationListener {
 		}
 		fntUi.setColor(1,1,1,varUiAlpha);
 		fntUi.setScale(1);
-		fntUi.draw(batch2d, "Wave 32", -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
+		fntUi.draw(batch2d, "Wave " + varWave, -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
 		fntUi.setScale(2);
 		fntUi.draw(batch2d, "54%", -fntUi.getBounds("54%").width/2f, CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/4);
 		fntUi.setScale(1);
-		fntUi.draw(batch2d, "38:83", CONST_SCREEN_WIDTH/2 - fntUi.getBounds("38:83").width - fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
+		fntUi.draw(batch2d, remainingInWave + " Remaining", CONST_SCREEN_WIDTH/2 - fntUi.getBounds(remainingInWave + " Remaining").width - fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
 		
 		//Draw death text
 		
