@@ -1,0 +1,10 @@
+package com.westernarc.gardenwarden.Graphics;
+
+import com.badlogic.gdx.graphics.g3d.decals.Decal;
+
+public class PlantDecal {
+	Decal decal;
+	public PlantDecal() {
+		
+	}
+}

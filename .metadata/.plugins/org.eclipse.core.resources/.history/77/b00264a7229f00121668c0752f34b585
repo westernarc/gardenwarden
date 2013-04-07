@@ -1,0 +1,5 @@
+package com.westernarc.gardenwarden.Graphics;
+
+public class PlantDecal {
+	Decal decal;
+}

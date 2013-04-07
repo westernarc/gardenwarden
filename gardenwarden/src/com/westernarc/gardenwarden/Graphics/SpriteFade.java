@@ -12,7 +12,7 @@ public class SpriteFade extends Sprite {
 		//fadeIn is whether to fade in or fade out
 		if(fadeIn) {
 			if(getColor().a < 1) {
-				if(getColor().a + rate < 1) {
+				if(getColor().a + rate <= 1) {
 					setColor(getColor().r,getColor().b,getColor().g, getColor().a + rate);
 				} else {
 					setColor(getColor().r, getColor().b, getColor().g, 1);
@@ -20,12 +20,15 @@ public class SpriteFade extends Sprite {
 			}
 		} else {
 			if(getColor().a > 0) {
-				if(getColor().a - rate > 0) {
+				if(getColor().a - rate >= 0) {
 					setColor(getColor().r, getColor().b, getColor().g, getColor().a - rate);
 				} else {
 					setColor(getColor().r, getColor().b, getColor().g, 0);
 				}
 			}
 		}
+	}
+	public float getAlpha() {
+		return getColor().a;
 	}
 }

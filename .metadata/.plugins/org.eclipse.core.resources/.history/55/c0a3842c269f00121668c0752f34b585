@@ -1,0 +1,31 @@
+package com.westernarc.gardenwarden.Graphics;
+
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.decals.Decal;
+
+public class PlantDecal {
+	Decal decal;
+	
+	float life;
+	boolean shakeDirection;
+	float shakeRotation;
+	float rotationRate = 10;
+	float shakeMax;
+	boolean isBeingEaten;
+	
+	public PlantDecal(TextureRegion texRegion) {
+		decal = Decal.newDecal(texRegion);
+	}
+	
+	public boolean isBeingEaten() {
+		return isBeingEaten;
+	}
+	
+	public void update(float tpf) {
+		if(shakeRotation > 10 )
+	}
+	
+	public void onEaten() {
+		isBeingEaten = true;
+	}
+}

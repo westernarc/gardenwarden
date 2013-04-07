@@ -325,4 +325,7 @@ public class PlayerNode extends Node {
 	public boolean isAttacking() {
 		return attacking;
 	}
+	public void setFrame(int frame) {
+		cntCurFrame = frame;
+	}
 }

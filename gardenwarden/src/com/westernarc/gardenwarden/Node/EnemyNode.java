@@ -34,8 +34,8 @@ public class EnemyNode extends Node {
 	
 	private boolean fleeing;
 	private boolean flinching;
-	private float flinchTime = 0.2f;
-	private float tmrFlinch;
+	//private float flinchTime = 0.2f;
+	//private float tmrFlinchRot;
 	
 	private float flinchVectorX;
 	private float flinchVectorZ;
@@ -65,7 +65,6 @@ public class EnemyNode extends Node {
 		
 		fleeing = false;
 		flinching = false;
-		tmrFlinch = 0;
 	}
 	public void update(float tpf) {
 		if(!fleeing && !flinching) {
@@ -75,14 +74,9 @@ public class EnemyNode extends Node {
 				updateTarget.set((float)Math.random() * 20 + 2,0,(float)Math.random() * 60 - 30);
 			}
 		} else if(flinching) {
-			tmrFlinch += tpf;
 			direction.x = flinchVectorX;
 			direction.z = flinchVectorZ;
-			if(tmrFlinch > flinchTime) {
-				flinching = false;
-				fleeing = true;
-				moveSpeed = 0.4f;
-			}
+			direction.y = direction.y - 0.01f;
 		} else if(fleeing) {
 			updateTarget.set(flinchVectorX * 1000, 0, flinchVectorZ * 1000);
 		}
@@ -127,7 +121,7 @@ public class EnemyNode extends Node {
 				rotation = (float)(Math.toDegrees(Math.atan(direction.z / -direction.x) + (Math.PI)));
 			}
 		}
-		move(direction.x * moveSpeed, 0, direction.z * moveSpeed);
+		move(direction.x * moveSpeed, direction.y * moveSpeed, direction.z * moveSpeed);
 		
 		tmrFrame += tpf;
 		if(tmrFrame > CONST_FRAMERATE) {
@@ -157,6 +151,7 @@ public class EnemyNode extends Node {
 		flinchVectorX = attackVec.x;
 		flinchVectorZ = attackVec.z;
 		moveSpeed = 3;
+		direction.y = 0.2f;
 	}
 	public boolean isFleeing() {
 		return fleeing;
