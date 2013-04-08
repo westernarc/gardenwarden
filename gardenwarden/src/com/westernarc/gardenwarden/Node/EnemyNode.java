@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.still.StillModel;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.westernarc.gardenwarden.GardenWarden;
 import com.westernarc.gardenwarden.Node.PlayerNode.ANIM;
 
 public class EnemyNode extends Node {
@@ -46,7 +47,7 @@ public class EnemyNode extends Node {
 		
 		framesWalk = new StillModel[10];
 		for(int i = 0; i < 10; i++) {
-			framesWalk[i] = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("models/roly/roly"+i+".g3dt"));
+			framesWalk[i] = GardenWarden.loadModel("models/roly/roly"+i);
 			framesWalk[i].setMaterial(material);
 		}
 		

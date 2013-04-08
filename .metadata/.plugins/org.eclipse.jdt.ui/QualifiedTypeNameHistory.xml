@@ -21,13 +21,15 @@
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g2d.Sprite"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Graphics.SpriteFade"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.GardenWarden.GAME_STATE"/>
-<fullyQualifiedTypeName name="com.westernarc.gardenwarden.GardenWarden.GAMESTATE"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.math.Vector2"/>
-<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.decals.Decal"/>
-<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g2d.TextureRegion"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.Texture"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.Gdx"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy"/>
-<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.PlayerNode.ANIM"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Graphics.EffectDecal"/>
+<fullyQualifiedTypeName name="java.util.Iterator"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.PlayerNode.ANIM"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.GardenWarden.GAMESTATE"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.decals.Decal"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Graphics.PlantDecal"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g2d.TextureRegion"/>
 </qualifiedTypeNameHistroy>
