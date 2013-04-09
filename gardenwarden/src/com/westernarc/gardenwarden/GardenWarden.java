@@ -11,28 +11,19 @@ import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
-import com.badlogic.gdx.graphics.g3d.decals.Decal;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry;
+import com.badlogic.gdx.graphics.g3d.loaders.g3d.chunks.G3dExporter;
 import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.materials.Material;
 import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.still.StillModel;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.Vector3;
-import com.westernarc.gardenwarden.Graphics.EffectDecal;
 import com.westernarc.gardenwarden.Graphics.SpriteFade;
 import com.westernarc.gardenwarden.Node.EnemyNode;
 import com.westernarc.gardenwarden.Node.Node;
 import com.westernarc.gardenwarden.Node.PlayerNode;
-import com.westernarc.gardenwarden.Node.PlayerNode.ANIM;
 
 public class GardenWarden implements ApplicationListener {
 	public static boolean exporting = false;
@@ -50,13 +41,8 @@ public class GardenWarden implements ApplicationListener {
 	private DecalBatch batch3d;
 	SpriteFade sprTitle;
 
-	Node nodCarrot;
-	Node nodPumpkin;
-	Node nodTomato;
-	Node nodWatermelon;
-	Node nodScallion;
-	Node nodSquash;
-
+	Node nodPlant[];
+	
 	float camAngle;
 	float camDistance;
 	float camHeight;
@@ -93,14 +79,20 @@ public class GardenWarden implements ApplicationListener {
 	float CONST_RESETOPAQUETIME = 0.5f;
 	
 	int varPlantHeld; //This stores what the character is holding.
-	int CONST_HELD_NOTHING = 0;
-	int CONST_HELD_CARROT = 1;
-	int CONST_HELD_PUMPKIN = 2;
-	int CONST_HELD_TOMATO = 3;
-	int CONST_HELD_WATERMELON = 4;
-	int CONST_HELD_SCALLION = 5;
-	int CONST_HELD_SQUASH = 6;
+	final int NOTHING = 0;
+	final int CARROT = 1;
+	final int PUMPKIN = 2;
+	final int TOMATO = 3;
+	final int WATERMELON = 4;
+	final int SCALLION = 5;
+	final int SQUASH = 6;
 	
+	final float PLANTWEIGHT[] = {0, 0.2f, 1.3f, 0.4f, 2f, 0.1f, 0.8f};
+	final float PLANTRATE[] = {1, 1, 0.7f, 1, 0.5f, 1, 0.9f};
+	
+	float varBonus;//Multiplier for certain plants
+	
+
 	@Override
 	public void create() {
 		CONST_SCREEN_WIDTH = Gdx.graphics.getWidth();
@@ -113,7 +105,7 @@ public class GardenWarden implements ApplicationListener {
 		batch3d = new DecalBatch();
 		//batch3d.setGroupStrategy(new CameraGroupStrategy(cam3d));
 		
-		camDistance = 20;
+		camDistance = 30;
 		camHeight = 20;
 		camAngle = (float)-Math.PI/2f;
 		cam3d.position.set((float)Math.sin(camAngle) * camDistance, camHeight, (float)Math.cos(camAngle) * camDistance);
@@ -125,14 +117,17 @@ public class GardenWarden implements ApplicationListener {
 		nodGarden.setModel(loadModel("models/garden"));
 		Material grassMat = new Material("mat", new TextureAttribute(new Texture(Gdx.files.internal("textures/gardentex.png")), 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse));
 		nodGarden.setMaterial(grassMat);
-		
-		nodWatermelon = new Node();
-		nodWatermelon.setModel(loadModel("models/watermelon"));
-		nodWatermelon.setMaterial(grassMat);
-		
+
+		nodPlant = new Node[7];
+		for(int i = 1; i <= 6; i++) {
+			nodPlant[i] = new Node();
+			nodPlant[i].setModel(loadModel("models/plant" + i));
+			nodPlant[i].setMaterial(grassMat);
+		}
+
 		sprTitle = new SpriteFade(new Texture(Gdx.files.internal("textures/title.png")));
 		sprTitle.setPosition(-sprTitle.getWidth()/2, -sprTitle.getHeight()/2);
-		sprTitle.setScale(CONST_SCREEN_HEIGHT / sprTitle.getHeight());
+		sprTitle.setScale(CONST_SCREEN_WIDTH / sprTitle.getWidth());
 		sprTitle.fade(1, false);
 		
 		fntUi = new BitmapFont(Gdx.files.internal("text/BimboJVE_24.fnt"), false);
@@ -146,6 +141,8 @@ public class GardenWarden implements ApplicationListener {
 		sprResetFilter.setPosition(-sprResetFilter.getWidth()/2f, -sprResetFilter.getHeight()/2f);
 		sprResetFilter.fade(1, false);
 		reinitialize();
+		//Load enemy
+		EnemyNode enode = new EnemyNode();
 	}
 	
 	private void reinitialize() {
@@ -162,9 +159,10 @@ public class GardenWarden implements ApplicationListener {
 		flgReset = false;
 		tmrResetOpaque = 0;
 		
-		varRequestedWeight = 10;  //Amount needed per round
-		varTimePerRound = 30; //Time alloted to gather the weight needed
+		varRequestedWeight = 2;  //Amount needed per round
+		varTimePerRound = 60; //Time alloted to gather the weight needed
 		varWeightProgress = 0; //Amount of weight currently gathered
+		tmrRound = 0;
 	}
 
 	//Spawns waves
@@ -222,11 +220,14 @@ public class GardenWarden implements ApplicationListener {
 
 		nodGarden.render();
 		
-		Gdx.gl10.glPushMatrix();
-		Gdx.gl10.glTranslatef(nodWatermelon.getX(), nodWatermelon.getY(), nodWatermelon.getZ());
-		Gdx.gl10.glScalef(0.5f, 0.5f, 0.5f);
-		nodWatermelon.render();
-		Gdx.gl10.glPopMatrix();
+		//Draw veggies
+		for(int i = 1; i <= 6; i++) {
+			Gdx.gl10.glPushMatrix();
+			Gdx.gl10.glTranslatef(nodPlant[i].getX(), nodPlant[i].getY(), nodPlant[i].getZ());
+			Gdx.gl10.glScalef(0.5f, 0.5f, 0.5f);
+			nodPlant[i].render();
+			Gdx.gl10.glPopMatrix();
+		}
 
 		batch3d.flush();
 		
@@ -287,6 +288,12 @@ public class GardenWarden implements ApplicationListener {
 				//dclWatermelon[i].setScale(dclWatermelon[i].getScaleX() * 0.99f);	
 			}
 			updateWave();
+			
+			tmrRound += tpf;
+			if(tmrRound > varTimePerRound) {
+				tmrRound = varTimePerRound;
+				varGameState = GAMESTATE.dead;
+			}
 			break;
 		case score:
 			if(flgReset){
@@ -321,22 +328,79 @@ public class GardenWarden implements ApplicationListener {
 		Iterator<EnemyNode> enemyItr = lstEnemies.iterator();
 		while(enemyItr.hasNext()){
 			EnemyNode enode = enemyItr.next();
-			if(Math.abs(enode.getX()) > 90 || Math.abs(enode.getZ()) > 90 || enode.getY() < -10) {
-				enemyItr.remove();
-				continue;
-			}
-			
 			//Dont update enemies that are out of bounds
 			enode.update(tpf);
-			int rad = 4;
+			int rad = 2;
 			float enemyX = enode.getX();
 			float enemyZ = enode.getZ();
-			//Check carrots, pumpkins, tomatoes, watermelon, scallion, and squash
-
+			
+			if(Math.abs(enemyX - nodPlayer.getX()) < rad && Math.abs(enemyZ - nodPlayer.getZ()) < rad && nodPlayer.getX() < 52) {
+				varPlantHeld = 0;
+			}
+		}
+		
+		//Check player's location to determine which plant to give
+		if(nodPlayer.getX() > 50) {
+			float playerZ = nodPlayer.getZ();
+			if(playerZ < -25 && playerZ > -26) {
+				varPlantHeld = CARROT;
+			} else if(playerZ > -18 && playerZ < -14) {
+				varPlantHeld = PUMPKIN;
+			} else if(playerZ > -12 && playerZ < -3) {
+				varPlantHeld = TOMATO;
+			} else if(playerZ < 6 && playerZ > 0) {
+				varPlantHeld = WATERMELON;
+			} else if(playerZ > 7 && playerZ < 14) {
+				varPlantHeld = SCALLION;
+			} else if(playerZ > 15 && playerZ < 20) {
+				varPlantHeld = SQUASH;
+			}
 		}
 		
 		//Update veggies
-		nodWatermelon.setPosition(nodPlayer.getX() + nodPlayer.getDirection().x * 8, 5, nodPlayer.getZ() + nodPlayer.getDirection().z * 8);
+		if(varPlantHeld >= 1 && varPlantHeld <= 6) {
+			nodPlant[varPlantHeld].moveTo(tpf, nodPlayer.getX() + nodPlayer.getDirection().x * 8, 5, nodPlayer.getZ() + nodPlayer.getDirection().z * 8);
+		}
+		//Reset veggies
+		for(int i = 1; i <= 6; i++) {
+			//Behavior for plants that are not held
+			if(i != varPlantHeld && nodPlant[i].getY() > -5) {
+				nodPlant[i].pop(tpf);
+			} else if(i != varPlantHeld && nodPlant[i].getY() < -3){
+				//Reset it to row position
+				switch(i) {
+				case CARROT:
+					nodPlant[CARROT].setPosition(52,-2,-25.5f);
+					break;
+				case PUMPKIN:
+					nodPlant[PUMPKIN].setPosition(52,-2,-16);
+					break;
+				case TOMATO:
+					nodPlant[TOMATO].setPosition(52,-2,-7);
+					break;
+				case WATERMELON:
+					nodPlant[i].setPosition(52,-2,3);
+					break;
+				case SCALLION:
+					nodPlant[i].setPosition(52,-2,11);
+					break;
+				case SQUASH:
+					nodPlant[i].setPosition(52,-2, 17.5f);
+					break;
+				}
+			}
+		}
+		//If the player makes it to stash with veggie, update accordingly
+		if(nodPlayer.getX() < -3) {
+			varWeightProgress += PLANTWEIGHT[varPlantHeld];
+			if(varWeightProgress >= varRequestedWeight){
+				//Request Completed
+				cntRound++;
+				varWeightProgress = 0;
+				tmrRound = 0;
+			}
+			varPlantHeld = NOTHING;
+		}
 	}
 	private void handleInput(float tpf) {
 		switch(varGameState) {
@@ -356,7 +420,11 @@ public class GardenWarden implements ApplicationListener {
 					angle = (float)(Math.toDegrees(Math.atan(difY/difX))) + 90;
 				}
 				nodPlayer.setRotation(-angle);
-				nodPlayer.move(nodPlayer.getDirection());
+				if(varPlantHeld == 0) {
+					nodPlayer.move(nodPlayer.getDirection());
+				} else {
+					nodPlayer.move(nodPlayer.getDirection().cpy().mul(PLANTRATE[varPlantHeld]));
+				}
 				nodPlayer.setAnim(PlayerNode.ANIM.walk);
 			} else {
 				nodPlayer.setAnim(PlayerNode.ANIM.stand);
@@ -427,6 +495,7 @@ public class GardenWarden implements ApplicationListener {
 		fntUi.setColor(1,1,1,varUiAlpha);
 		fntUi.setScale(1);
 		fntUi.draw(batch2d, "Request no." + (cntRound + 1), -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
+		fntUi.draw(batch2d, "Collect " + Math.round(varRequestedWeight * 10) / 10f + " lbs", -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight() * 3 / 2f);
 		fntUi.setScale(2);
 		String time = Math.round(varTimePerRound - tmrRound) + "s";
 		fntUi.draw(batch2d, time, -fntUi.getBounds(time).width/2f, CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/4);
@@ -467,9 +536,11 @@ public class GardenWarden implements ApplicationListener {
 	
 	public static StillModel loadModel(String url) {
 		if(GardenWarden.exporting) {
-			return ModelLoaderRegistry.loadStillModel(Gdx.files.internal(url + ".g3d"));
-		} else {
+			StillModel model = ModelLoaderRegistry.loadStillModel(Gdx.files.internal(url + ".g3dt"));
+			G3dExporter.export(model, Gdx.files.absolute(url + ".g3d"));
 			return ModelLoaderRegistry.loadStillModel(Gdx.files.internal(url + ".g3dt"));
+		} else {
+			return ModelLoaderRegistry.loadStillModel(Gdx.files.internal(url + ".g3d"));
 		}
 	}
 }

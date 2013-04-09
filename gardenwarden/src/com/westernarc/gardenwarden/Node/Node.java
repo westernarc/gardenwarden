@@ -74,4 +74,25 @@ public class Node {
 	public void move(float x, float y, float z) {
 		position.add(x,y,z);
 	}
+	
+	public void moveTo(float tpf, Vector3 targ) {
+		moveTo(tpf, targ.x, targ.y, targ.z);
+	}
+	public void moveTo(float tpf, float x, float y, float z) {
+		//position.set(x,y,z);
+		float dstX = x - position.x;
+		float dstY = y - position.y;
+		float dstZ = z - position.z;
+
+		
+		//if(dst > 1 && dst < -1) {
+			position.add(dstX/2, dstY/2, dstZ/2);
+		//}
+			popY = 0.3f;
+	}
+	float popY;
+	public void pop(float tpf) {
+		position.add(0,popY,0);
+		popY -= tpf * 2;
+	}
 }

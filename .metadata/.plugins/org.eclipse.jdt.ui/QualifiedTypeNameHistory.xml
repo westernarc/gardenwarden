@@ -12,7 +12,6 @@
 <fullyQualifiedTypeName name="com.badlogic.gdx.math.Quaternion"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.math.Vector3"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.math.Matrix4"/>
-<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.model.still.StillModel"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.EnemyNode.ANIM"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.EnemyNode"/>
 <fullyQualifiedTypeName name="java.util.ArrayList"/>
@@ -27,9 +26,11 @@
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Graphics.EffectDecal"/>
 <fullyQualifiedTypeName name="java.util.Iterator"/>
-<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.PlayerNode.ANIM"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.GardenWarden.GAMESTATE"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.decals.Decal"/>
 <fullyQualifiedTypeName name="com.westernarc.gardenwarden.Graphics.PlantDecal"/>
 <fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g2d.TextureRegion"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.Node.PlayerNode.ANIM"/>
+<fullyQualifiedTypeName name="com.badlogic.gdx.graphics.g3d.model.still.StillModel"/>
+<fullyQualifiedTypeName name="com.westernarc.gardenwarden.GardenWarden"/>
 </qualifiedTypeNameHistroy>

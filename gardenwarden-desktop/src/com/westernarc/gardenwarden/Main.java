@@ -8,8 +8,8 @@ public class Main {
 		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
 		cfg.title = "gardenwarden";
 		cfg.useGL20 = false;
-		cfg.width = 800;
-		cfg.height = 480;
+		cfg.width = 480;
+		cfg.height = 800;
 		
 		new LwjglApplication(new GardenWarden(), cfg);
 	}

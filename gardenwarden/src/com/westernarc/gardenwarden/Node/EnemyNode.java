@@ -15,8 +15,9 @@ import com.westernarc.gardenwarden.Node.PlayerNode.ANIM;
 
 public class EnemyNode extends Node {
 	//Use this to give a red tint when hit
-	StillModel framesWalk[];
-	
+	static StillModel framesWalk[];
+	static Texture bugtex;
+	static Material bugmat;
 	private int cntCurFrame;
 	private float tmrFrame;
 	private static final float CONST_FRAMERATE = 1/30f;
@@ -42,15 +43,20 @@ public class EnemyNode extends Node {
 	private float flinchVectorZ;
 	
 	public EnemyNode() {
-		texture = new Texture(Gdx.files.internal("textures/gardentex.png"));
-		material = new Material("mat", new TextureAttribute(texture, 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse));
+		if(bugtex == null)
+			bugtex = new Texture(Gdx.files.internal("textures/gardentex.png"));
+		if(bugmat == null)
+			bugmat = new Material("mat", new TextureAttribute(bugtex, 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse));
 		
-		framesWalk = new StillModel[10];
-		for(int i = 0; i < 10; i++) {
-			framesWalk[i] = GardenWarden.loadModel("models/roly/roly"+i);
-			framesWalk[i].setMaterial(material);
+		if(framesWalk == null) {
+			framesWalk = new StillModel[10];
+			for(int i = 0; i < 10; i++) {
+				if(framesWalk[i] == null) {
+					framesWalk[i] = GardenWarden.loadModel("models/roly/roly"+i);
+					framesWalk[i].setMaterial(bugmat);
+				}
+			}
 		}
-		
 		varCurAnimation = ANIM.walk;
 		model = framesWalk[0];
 		cntCurFrame = 0;
