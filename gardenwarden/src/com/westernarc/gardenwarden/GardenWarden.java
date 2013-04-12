@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.loaders.ModelLoaderRegistry;
@@ -92,11 +93,18 @@ public class GardenWarden implements ApplicationListener {
 	
 	float varBonus;//Multiplier for certain plants
 	
-
+	float varWeightTextScale;
+	
+	SpriteFade sprArrows;
+	float TOUCHX;
+	float TOUCHY;
+	
 	@Override
 	public void create() {
 		CONST_SCREEN_WIDTH = Gdx.graphics.getWidth();
 		CONST_SCREEN_HEIGHT = Gdx.graphics.getHeight();
+		TOUCHX = 0;
+		TOUCHY = CONST_SCREEN_HEIGHT/4f;
 		
 		cam2d = new OrthographicCamera(CONST_SCREEN_WIDTH, CONST_SCREEN_HEIGHT);
 		batch2d = new SpriteBatch();
@@ -124,13 +132,13 @@ public class GardenWarden implements ApplicationListener {
 			nodPlant[i].setModel(loadModel("models/plant" + i));
 			nodPlant[i].setMaterial(grassMat);
 		}
-
+		
 		sprTitle = new SpriteFade(new Texture(Gdx.files.internal("textures/title.png")));
 		sprTitle.setPosition(-sprTitle.getWidth()/2, -sprTitle.getHeight()/2);
 		sprTitle.setScale(CONST_SCREEN_WIDTH / sprTitle.getWidth());
 		sprTitle.fade(1, false);
 		
-		fntUi = new BitmapFont(Gdx.files.internal("text/BimboJVE_24.fnt"), false);
+		fntUi = new BitmapFont(Gdx.files.internal("text/BimboJVE_32.fnt"), false);
 		varGameState = GAMESTATE.title;
 		
 		lstEnemies = new ArrayList<EnemyNode>();
@@ -142,7 +150,11 @@ public class GardenWarden implements ApplicationListener {
 		sprResetFilter.fade(1, false);
 		reinitialize();
 		//Load enemy
-		EnemyNode enode = new EnemyNode();
+		EnemyNode enode = new EnemyNode(EnemyNode.TYPE.lady);
+		
+		sprArrows = new SpriteFade(new Texture(Gdx.files.internal("textures/arrows.png")));
+		sprArrows.fade(1, false);
+		sprArrows.setPosition(-sprArrows.getWidth()/2, -TOUCHY - sprArrows.getHeight()/2);
 	}
 	
 	private void reinitialize() {
@@ -159,22 +171,28 @@ public class GardenWarden implements ApplicationListener {
 		flgReset = false;
 		tmrResetOpaque = 0;
 		
-		varRequestedWeight = 2;  //Amount needed per round
+		varRequestedWeight = 0.3f;  //Amount needed per round
 		varTimePerRound = 60; //Time alloted to gather the weight needed
 		varWeightProgress = 0; //Amount of weight currently gathered
 		tmrRound = 0;
+		
+		varWeightTextScale = 1;
 	}
 
 	//Spawns waves
 	private void updateWave() {
 		//Spawn when the last wave has ended
-		if(lstEnemies.size() < (cntRound + 3)) {
-			EnemyNode nodEnemy = new EnemyNode();
+		if(lstEnemies.size() < (cntRound + 6)) {
+			EnemyNode nodEnemy;
+			//Roly
+			if(Math.random() > 0.5) {
+				nodEnemy = new EnemyNode(EnemyNode.TYPE.roly);
+			} else {
+				nodEnemy = new EnemyNode(EnemyNode.TYPE.lady);
+			}
 			//Random from left, right or top
 			double random = Math.random();
-			if(random < 0.33) {
-				nodEnemy.setPosition(70, 0, (float)Math.random() * 60 - 30);
-			} else if(random < 0.66) {
+			if(random < 0.5) {
 				nodEnemy.setPosition((float)Math.random() * 60 - 30, 0, 60);
 			} else {
 				nodEnemy.setPosition((float)Math.random() * 60 - 30, 0, -60);
@@ -242,7 +260,12 @@ public class GardenWarden implements ApplicationListener {
 		update(tpf);
 	}
 	private void update(float tpf) {
-					
+		if(varWeightTextScale > 1) {
+			varWeightTextScale -= tpf * 2;
+			if(varWeightTextScale < 1) {
+				varWeightTextScale = 1;
+			}
+		}
 		cam3d.position.set(-camDistance + nodPlayer.getX(), camHeight, nodPlayer.getPosition().z);
 		cam3d.lookAt(nodPlayer.getX(), 0, nodPlayer.getZ());
 		cam3d.update(true);
@@ -315,7 +338,7 @@ public class GardenWarden implements ApplicationListener {
 		case splash:
 			break;
 		case title:
-			sprTitle.fade(tpf, true);
+			sprTitle.fade(1/60f, true);
 			break;
 		}
 	}
@@ -391,17 +414,22 @@ public class GardenWarden implements ApplicationListener {
 			}
 		}
 		//If the player makes it to stash with veggie, update accordingly
-		if(nodPlayer.getX() < -3) {
-			varWeightProgress += PLANTWEIGHT[varPlantHeld];
-			if(varWeightProgress >= varRequestedWeight){
-				//Request Completed
-				cntRound++;
-				varWeightProgress = 0;
-				tmrRound = 0;
+		if(nodPlayer.getX() < -3 && (nodPlayer.getZ() > -14 && nodPlayer.getZ() < 14)) {
+			if(varPlantHeld != NOTHING) {
+				varWeightProgress += PLANTWEIGHT[varPlantHeld];
+				varWeightTextScale = 1.1f;
+				if(varWeightProgress >= varRequestedWeight){
+					//Request Completed
+					varRequestedWeight += 0.1f;
+					cntRound++;
+					varWeightProgress = 0;
+					tmrRound = 0;
+				}
+				varPlantHeld = NOTHING;
 			}
-			varPlantHeld = NOTHING;
 		}
 	}
+	
 	private void handleInput(float tpf) {
 		switch(varGameState) {
 		case play:
@@ -410,10 +438,13 @@ public class GardenWarden implements ApplicationListener {
 			if(Gdx.input.isTouched()) {
 				int x = Gdx.input.getX();
 				int y = Gdx.input.getY();
-
+				sprArrows.fade(tpf * 2, true);
 				float angle = 0;
-				float difX = x - CONST_SCREEN_WIDTH / 2;
-				float difY = y - CONST_SCREEN_HEIGHT / 2;
+				float difX = (x - TOUCHX) - CONST_SCREEN_WIDTH / 2;
+				float difY = (y - TOUCHY) - CONST_SCREEN_HEIGHT / 2;
+				if(difX == 0) {
+					difX = 1;
+				}
 				if(difX >= 0) { 
 					angle = (float)(Math.toDegrees(Math.atan(difY/difX))) - 90;
 				} else {
@@ -428,6 +459,7 @@ public class GardenWarden implements ApplicationListener {
 				nodPlayer.setAnim(PlayerNode.ANIM.walk);
 			} else {
 				nodPlayer.setAnim(PlayerNode.ANIM.stand);
+				sprArrows.fade(tpf * 2, false);
 			}
 			
 			if(Gdx.input.isKeyPressed(Keys.ANY_KEY)) {
@@ -464,7 +496,6 @@ public class GardenWarden implements ApplicationListener {
 			break;
 		case score:
 			if(Gdx.input.isTouched() && !flgReset) {
-				System.out.println("Resetting");
 				//Start the reset
 				flgReset = true;
 			}
@@ -496,12 +527,19 @@ public class GardenWarden implements ApplicationListener {
 		fntUi.setScale(1);
 		fntUi.draw(batch2d, "Request no." + (cntRound + 1), -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
 		fntUi.draw(batch2d, "Collect " + Math.round(varRequestedWeight * 10) / 10f + " lbs", -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight() * 3 / 2f);
-		fntUi.setScale(2);
+		//fntUi.setScale(2);
 		String time = Math.round(varTimePerRound - tmrRound) + "s";
-		fntUi.draw(batch2d, time, -fntUi.getBounds(time).width/2f, CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/4);
-		fntUi.setScale(1);
-		String weightStats = Math.round(varWeightProgress * 10) / 10f + "/" + Math.round(varRequestedWeight * 10) / 10f + " lbs";
+		fntUi.draw(batch2d, time, -fntUi.getBounds(time).width/2f, CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
+		fntUi.setScale(varWeightTextScale);
+		String weightStats = Math.round(varWeightProgress * 10) / 10f + " lbs";
 		fntUi.draw(batch2d, weightStats, CONST_SCREEN_WIDTH/2 - fntUi.getBounds(weightStats).width - fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
+		
+		if(varPlantHeld != 0) {
+			fntUi.setScale(0.5f);
+			String addStats = "+" + Math.round(PLANTWEIGHT[varPlantHeld] * 10) / 10f + "lbs";
+			fntUi.draw(batch2d, addStats, CONST_SCREEN_WIDTH/2 - fntUi.getBounds(addStats).width - fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight() * 5 / 2f);
+		}
+		fntUi.setScale(1);
 		//Debug
 		//fntUi.draw(batch2d, "wvdn:" + flgWaveEnd + " sz:" + lstEnemies.size() + " lf:" + (varGardenHealth/varMaxGardenHealth), -CONST_SCREEN_WIDTH/2f,0);
 		
@@ -509,17 +547,17 @@ public class GardenWarden implements ApplicationListener {
 		
 		if(varGameState == GAMESTATE.dead) {
 			fntUi.setColor(1,1,1,varDeathTextAlpha);
-			fntUi.setScale(3);
-			fntUi.draw(batch2d, "Request Failed!", -fntUi.getBounds("Garden Lost!").width/2f, 0);
+			fntUi.setScale(2);
+			fntUi.draw(batch2d, "Request Failed!", -fntUi.getBounds("Request Failed!").width/2f, 0);
 			fntUi.setScale(1);
 			fntUi.setColor(1,1,1,1);
 		} else if(varGameState == GAMESTATE.score){
 			fntUi.setColor(1,1,1,1);
-			fntUi.draw(batch2d, "Requests Fulfilled: " + cntRound, 0, 0);
+			String score = "Requests Fulfilled: " + cntRound;
+			fntUi.draw(batch2d, score, -fntUi.getBounds(score).width/2f, 0);
 		}
-
+		sprArrows.draw(batch2d);
 		sprResetFilter.draw(batch2d);
-		
 		batch2d.end();
 	}
 	@Override

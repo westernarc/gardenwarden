@@ -15,7 +15,8 @@ import com.westernarc.gardenwarden.Node.PlayerNode.ANIM;
 
 public class EnemyNode extends Node {
 	//Use this to give a red tint when hit
-	static StillModel framesWalk[];
+	static StillModel framesWalkRoly[];
+	static StillModel framesWalkLady[];
 	static Texture bugtex;
 	static Material bugmat;
 	private int cntCurFrame;
@@ -42,23 +43,44 @@ public class EnemyNode extends Node {
 	private float flinchVectorX;
 	private float flinchVectorZ;
 	
-	public EnemyNode() {
+	public enum TYPE {roly, lady, grub}
+	TYPE type;
+	public EnemyNode(TYPE type) {
+		this.type = type;
 		if(bugtex == null)
 			bugtex = new Texture(Gdx.files.internal("textures/gardentex.png"));
 		if(bugmat == null)
 			bugmat = new Material("mat", new TextureAttribute(bugtex, 0, "s_tex"), new ColorAttribute(Color.WHITE, ColorAttribute.diffuse));
 		
-		if(framesWalk == null) {
-			framesWalk = new StillModel[10];
+		if(framesWalkRoly == null) {
+			framesWalkRoly = new StillModel[10];
 			for(int i = 0; i < 10; i++) {
-				if(framesWalk[i] == null) {
-					framesWalk[i] = GardenWarden.loadModel("models/roly/roly"+i);
-					framesWalk[i].setMaterial(bugmat);
+				if(framesWalkRoly[i] == null) {
+					framesWalkRoly[i] = GardenWarden.loadModel("models/roly/roly"+i);
+					framesWalkRoly[i].setMaterial(bugmat);
+				}
+			}
+		}
+		if(framesWalkLady == null) {
+			framesWalkLady = new StillModel[10];
+			for(int i = 0; i < 10; i++) {
+				if(framesWalkLady[i] == null) {
+					framesWalkLady[i] = GardenWarden.loadModel("models/lady/lady"+i);
+					framesWalkLady[i].setMaterial(bugmat);
 				}
 			}
 		}
 		varCurAnimation = ANIM.walk;
-		model = framesWalk[0];
+		switch(type) {
+		case roly:
+			model = framesWalkRoly[0];
+			break;
+		case lady:
+			model = framesWalkLady[0];
+			break;
+		case grub:
+			break;
+		}
 		cntCurFrame = 0;
 		
 		direction = new Vector3();
@@ -78,7 +100,7 @@ public class EnemyNode extends Node {
 			tmrTargetChange += tpf;
 			if(tmrTargetChange > CONST_TARGET_CHANGE_TIME) {
 				tmrTargetChange = 0;
-				updateTarget.set((float)Math.random() * 20 + 2,0,(float)Math.random() * 60 - 30);
+				updateTarget.set((float)Math.random() * 20 + 2,0,(float)Math.random() * 70 - 35);
 			}
 		} else if(flinching) {
 			direction.x = flinchVectorX;
@@ -140,7 +162,16 @@ public class EnemyNode extends Node {
 			if(cntCurFrame >= 10) {
 				cntCurFrame = 1;
 			}
-			model = framesWalk[cntCurFrame];
+			switch(type) {
+			case roly:
+				model = framesWalkRoly[cntCurFrame];
+				break;
+			case lady:
+				model = framesWalkLady[cntCurFrame];
+				break;
+			case grub:
+				break;
+			}
 			break;
 		default:
 			break;
