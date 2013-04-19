@@ -189,7 +189,6 @@ public class GardenWarden implements ApplicationListener {
 		
 		musBackground = Gdx.audio.newMusic(Gdx.files.internal("audio/Born Barnstomers.mp3"));
 		musBackground.setLooping(true);
-		musBackground.setVolume(0.2f);
 		musBackground.play();
 		
 		sndDrop = Gdx.audio.newSound(Gdx.files.internal("audio/drop.wav"));
@@ -700,6 +699,7 @@ public class GardenWarden implements ApplicationListener {
 			fntUi.setScale(1);
 			fntUi.setColor(1,1,1,1);
 		} else if(varGameState == GAMESTATE.score){
+			fntUi.setScale(1.5f);
 			fntUi.setColor(1,1,1,1);
 			String score = "Requests Fulfilled: " + cntRound;
 			fntUi.draw(batch2d, score, -fntUi.getBounds(score).width/2f, fntUi.getLineHeight() * 3);
