@@ -1,4 +1,0 @@
-package com.westernarc.gardenwarden.Graphics;
-
-public class SpriteFade extends Sprite {
-}

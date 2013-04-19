@@ -1,5 +1,0 @@
-package com.westernarc.gardenwarden.Node;
-
-public class PlayerNode extends Node {
-	
-}

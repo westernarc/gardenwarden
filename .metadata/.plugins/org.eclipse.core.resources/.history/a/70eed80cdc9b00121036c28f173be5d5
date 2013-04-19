@@ -1,7 +1,0 @@
-package com.westernarc.gardenwarden.Node;
-
-import com.badlogic.gdx.graphics.g3d.model.still.StillModel;
-
-public class Node {
-	StillModel model;
-}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;gardenwarden-android/assets/audio/oom.wav&apos; to &apos;drop.wav&apos;" description="Rename resource &apos;oom.wav&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="assets/audio/oom.wav" name="drop.wav" stamp="1366342312381" updateReferences="true"/>
+</session>

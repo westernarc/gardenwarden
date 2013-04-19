@@ -6,6 +6,8 @@ import java.util.Iterator;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -89,7 +91,7 @@ public class GardenWarden implements ApplicationListener {
 	final int SQUASH = 6;
 	
 	final float PLANTWEIGHT[] = {0, 0.2f, 1.3f, 0.4f, 2f, 0.1f, 0.8f};
-	final float PLANTRATE[] = {1, 1, 0.7f, 1, 0.5f, 1, 0.9f};
+	final float PLANTRATE[] = {1, 1, 0.8f, 1, 0.7f, 1, 0.9f};
 	
 	float varBonus;//Multiplier for certain plants
 	
@@ -106,6 +108,20 @@ public class GardenWarden implements ApplicationListener {
 	float varRequestAlpha;
 	float varWeightAlpha;
 	float varScoreScale;
+	
+	Music musBackground;
+	Sound sndCollect;
+	Sound sndDrop;
+	Sound sndPickup;
+	
+	float varJudgeAlpha;//Alpha of text that judges how well you met the request
+	String strBestJudge = "Perfect Weight, Great!";
+	String strOkJudge = "Bit Overweight, Not bad!";
+	String strBadJudge = "...Overweight, But Ok";
+	String strWorstJudge = "Too Much! You Joking?";
+	float varJudgePosY;//Position of judge text vertically
+	String varJudgeString; //Set this to the correct judge string
+	boolean flgShowJudge; //Flag for whether or not to show judgement
 	
 	@Override
 	public void create() {
@@ -159,6 +175,7 @@ public class GardenWarden implements ApplicationListener {
 
 		//Load enemy
 		EnemyNode enode = new EnemyNode(EnemyNode.TYPE.lady);
+		enode = null;
 		
 		sprArrows = new SpriteFade(new Texture(Gdx.files.internal("textures/arrows.png")));
 		sprArrows.fade(1, false);
@@ -169,6 +186,15 @@ public class GardenWarden implements ApplicationListener {
 		sprBar = new Sprite(new Texture(Gdx.files.internal("textures/bar.png")));
 		sprBar.setScale(50,2);
 		sprBar.setPosition(fntUi.getSpaceWidth() + sprBar.getBoundingRectangle().width/2 - CONST_SCREEN_WIDTH / 2f, CONST_SCREEN_HEIGHT / 2f);
+		
+		musBackground = Gdx.audio.newMusic(Gdx.files.internal("audio/Born Barnstomers.mp3"));
+		musBackground.setLooping(true);
+		musBackground.setVolume(0.2f);
+		musBackground.play();
+		
+		sndDrop = Gdx.audio.newSound(Gdx.files.internal("audio/drop.wav"));
+		sndPickup = Gdx.audio.newSound(Gdx.files.internal("audio/pickup.wav"));
+		sndCollect = Gdx.audio.newSound(Gdx.files.internal("audio/collect.wav"));
 		reinitialize();
 	}
 	
@@ -224,6 +250,9 @@ public class GardenWarden implements ApplicationListener {
 				break;
 			}
 		}
+		
+		varJudgeAlpha = 0;
+		varJudgePosY = 0;
 	}
 
 	//Spawns waves
@@ -319,6 +348,26 @@ public class GardenWarden implements ApplicationListener {
 				varScoreScale = 1;
 			}
 		}
+		
+		if(flgShowJudge){
+			varJudgePosY += tpf * CONST_SCREEN_HEIGHT/6;
+			if(varJudgeAlpha < 1) {
+				varJudgeAlpha += tpf * 2;
+			} else if(varJudgeAlpha > 1) {
+				varJudgeAlpha = 1;
+				flgShowJudge = false;
+			}
+		} else {
+			if(varJudgeAlpha > 0) {
+				varJudgeAlpha -= tpf;
+				varJudgePosY += tpf * CONST_SCREEN_HEIGHT/6;
+			} else if(varJudgeAlpha < 0) {
+				varJudgeAlpha = 0;
+				varJudgePosY = 0;
+			}
+		}
+		
+		
 		cam3d.position.set(-camDistance + nodPlayer.getX(), camHeight, nodPlayer.getPosition().z);
 		cam3d.lookAt(nodPlayer.getX(), 0, nodPlayer.getZ());
 		cam3d.update(true);
@@ -411,25 +460,34 @@ public class GardenWarden implements ApplicationListener {
 			float enemyZ = enode.getZ();
 			
 			if(Math.abs(enemyX - nodPlayer.getX()) < rad && Math.abs(enemyZ - nodPlayer.getZ()) < rad && nodPlayer.getX() < 52) {
-				varPlantHeld = 0;
+				if(varPlantHeld != NOTHING) {
+					sndDrop.play();
+					varPlantHeld = NOTHING;
+				}
 			}
 		}
 		
 		//Check player's location to determine which plant to give
 		if(nodPlayer.getX() > 50) {
 			float playerZ = nodPlayer.getZ();
-			if(playerZ < -23 && playerZ > -27) {
+			if(playerZ < -23 && playerZ > -27 && varPlantHeld != CARROT) {
 				varPlantHeld = CARROT;
-			} else if(playerZ > -20 && playerZ < -14) {
+				sndPickup.play();
+			} else if(playerZ > -20 && playerZ < -14 && varPlantHeld != PUMPKIN) {
 				varPlantHeld = PUMPKIN;
-			} else if(playerZ > -12 && playerZ < -3) {
+				sndPickup.play();
+			} else if(playerZ > -12 && playerZ < -3 && varPlantHeld != TOMATO) {
 				varPlantHeld = TOMATO;
-			} else if(playerZ < 6 && playerZ > 0) {
+				sndPickup.play();
+			} else if(playerZ < 6 && playerZ > 0 && varPlantHeld != WATERMELON) {
 				varPlantHeld = WATERMELON;
-			} else if(playerZ > 7 && playerZ < 14) {
+				sndPickup.play();
+			} else if(playerZ > 7 && playerZ < 14 && varPlantHeld != SCALLION) {
 				varPlantHeld = SCALLION;
-			} else if(playerZ > 15 && playerZ < 20) {
+				sndPickup.play();
+			} else if(playerZ > 15 && playerZ < 20 && varPlantHeld != SQUASH) {
 				varPlantHeld = SQUASH;
+				sndPickup.play();
 			}
 		}
 		
@@ -471,18 +529,27 @@ public class GardenWarden implements ApplicationListener {
 			if(varPlantHeld != NOTHING) {
 				varWeightProgress += PLANTWEIGHT[varPlantHeld];
 				varWeightTextScale = 1.1f;
+				sndCollect.play();
 				if(varWeightProgress >= varRequestedWeight){
 					//Add to score depending on weight gathered
 					if(varWeightProgress == varRequestedWeight) {
 						varGameScore += 200;
+						varJudgeString = strBestJudge;
 					} else if(varWeightProgress - varRequestedWeight <= 0.1) {
 						varGameScore += 100;
-					} else if(varWeightProgress - varRequestedWeight > 0.1) {
+						varJudgeString = strOkJudge;
+					} else if(varWeightProgress - varRequestedWeight <= 0.2) {
 						varGameScore += 20;
-					} 
+						varJudgeString = strBadJudge;
+					} else {
+						//No score award
+						varJudgeString = strWorstJudge;
+					}
 					varScoreScale = 1.1f;
 					//Request Completed
-					varRequestedWeight = Math.round(Math.random() * 35) / 10f;
+					flgShowJudge = true;
+					
+					varRequestedWeight = Math.round(((Math.random()) * 27) + 1) / 10f;
 					cntRound++;
 					varWeightProgress = 0;
 					tmrRound = 0;
@@ -523,7 +590,7 @@ public class GardenWarden implements ApplicationListener {
 				nodPlayer.setAnim(PlayerNode.ANIM.stand);
 				sprArrows.fade(tpf * 2, false);
 			}
-			
+			/*
 			if(Gdx.input.isKeyPressed(Keys.ANY_KEY)) {
 				if(!Gdx.input.isKeyPressed(Keys.E) && !Gdx.input.isKeyPressed(Keys.S)) {
 					nodPlayer.setAnim(PlayerNode.ANIM.walk);
@@ -545,7 +612,7 @@ public class GardenWarden implements ApplicationListener {
 			}
 			if(Gdx.input.isKeyPressed(Keys.Y)) {
 				varGameState = GAMESTATE.dead;
-			}
+			}*/
 			break;
 		case splash:
 			break;
@@ -635,15 +702,19 @@ public class GardenWarden implements ApplicationListener {
 		} else if(varGameState == GAMESTATE.score){
 			fntUi.setColor(1,1,1,1);
 			String score = "Requests Fulfilled: " + cntRound;
-			fntUi.draw(batch2d, score, -fntUi.getBounds(score).width/2f, fntUi.getLineHeight());
+			fntUi.draw(batch2d, score, -fntUi.getBounds(score).width/2f, fntUi.getLineHeight() * 3);
 			String score2 = "Score: " + varGameScore;
-			fntUi.draw(batch2d, score2, -fntUi.getBounds(score2).width/2f, 0);
+			fntUi.draw(batch2d, score2, -fntUi.getBounds(score2).width/2f, fntUi.getLineHeight() * 2);
 			
 			fntUi.draw(batch2d, "Touch to retry!", -fntUi.getBounds("Touch to retry!").width/2f, -fntUi.getLineHeight() * 3);
 		}
+		
+		//Draw Touch Arrows
 		sprArrows.draw(batch2d);
+		
+		//Draw bar time scale
 		float barScale = ((varTimePerRound - (float)tmrRound )/ varTimePerRound) * ( (CONST_SCREEN_WIDTH - (fntUi.getSpaceWidth() * 2)) / sprBar.getWidth() );
-		if(varBarScale < barScale) {
+		if(varBarScale < barScale && barScale - varBarScale > 1) {
 			varBarScale += 1;
 			if(varBarScale > (CONST_SCREEN_WIDTH - (fntUi.getSpaceWidth() * 2)) / sprBar.getWidth()) {
 				varBarScale = ( (CONST_SCREEN_WIDTH - (fntUi.getSpaceWidth() * 2)) / sprBar.getWidth() );;
@@ -653,9 +724,17 @@ public class GardenWarden implements ApplicationListener {
 		}
 		sprBar.setColor(1,1,1, varUiAlpha);
 		varBarScale = Math.round(varBarScale);
+
 		sprBar.setScale(varBarScale, 2);
 		sprBar.setPosition(fntUi.getSpaceWidth() + sprBar.getBoundingRectangle().width/2 - CONST_SCREEN_WIDTH / 2f, CONST_SCREEN_HEIGHT / 2f - fntUi.getLineHeight() / 4f);
 		sprBar.draw(batch2d);
+		
+		if(varJudgeAlpha > 0 && varJudgeString != null) {
+			fntUi.setColor(1,1,1,varJudgeAlpha);
+			fntUi.draw(batch2d, varJudgeString, -fntUi.getBounds(varJudgeString).width/2f, varJudgePosY);
+			fntUi.setColor(1,1,1,1);
+		}
+		
 		sprResetFilter.draw(batch2d);
 		batch2d.end();
 	}
