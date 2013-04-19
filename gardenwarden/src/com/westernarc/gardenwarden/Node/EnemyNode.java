@@ -100,7 +100,7 @@ public class EnemyNode extends Node {
 			tmrTargetChange += tpf;
 			if(tmrTargetChange > CONST_TARGET_CHANGE_TIME) {
 				tmrTargetChange = 0;
-				updateTarget.set((float)Math.random() * 20 + 2,0,(float)Math.random() * 70 - 35);
+				updateTarget.set((float)Math.random() * 40 + 3,0,(float)Math.random() * 70 - 35);
 			}
 		} else if(flinching) {
 			direction.x = flinchVectorX;

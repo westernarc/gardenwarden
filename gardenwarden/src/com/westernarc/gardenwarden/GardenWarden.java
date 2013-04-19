@@ -32,6 +32,7 @@ public class GardenWarden implements ApplicationListener {
 	public static boolean exporting = false;
 	private float CONST_SCREEN_WIDTH;
 	private float CONST_SCREEN_HEIGHT;
+	private float varResolutionDifference;
 	
 	private static final float CONST_BOUND_LEFT = -35;
 	private static final float CONST_BOUND_RIGHT = 35;
@@ -127,6 +128,8 @@ public class GardenWarden implements ApplicationListener {
 	public void create() {
 		CONST_SCREEN_WIDTH = Gdx.graphics.getWidth();
 		CONST_SCREEN_HEIGHT = Gdx.graphics.getHeight();
+		varResolutionDifference = CONST_SCREEN_WIDTH / 480;
+		
 		TOUCHX = 0;
 		TOUCHY = CONST_SCREEN_HEIGHT/4f;
 		
@@ -184,7 +187,7 @@ public class GardenWarden implements ApplicationListener {
 		varGameScore = 0;
 		
 		sprBar = new Sprite(new Texture(Gdx.files.internal("textures/bar.png")));
-		sprBar.setScale(50,2);
+		sprBar.setScale(50,2 * varResolutionDifference);
 		sprBar.setPosition(fntUi.getSpaceWidth() + sprBar.getBoundingRectangle().width/2 - CONST_SCREEN_WIDTH / 2f, CONST_SCREEN_HEIGHT / 2f);
 		
 		musBackground = Gdx.audio.newMusic(Gdx.files.internal("audio/Born Barnstomers.mp3"));
@@ -216,13 +219,13 @@ public class GardenWarden implements ApplicationListener {
 		varWeightProgress = 0; //Amount of weight currently gathered
 		tmrRound = 0;
 		
-		varWeightTextScale = 1;
+		varWeightTextScale =  varResolutionDifference;
 		varBarScale = ( (CONST_SCREEN_WIDTH - (fntUi.getSpaceWidth() * 2)) / sprBar.getWidth() );;
 		
 		varGameScore = 0;
 		varRequestAlpha = 1;
 		varWeightAlpha = 1;
-		varScoreScale = 1;
+		varScoreScale =  varResolutionDifference;
 		
 		varPlantHeld = NOTHING;
 		
@@ -335,16 +338,16 @@ public class GardenWarden implements ApplicationListener {
 		update(tpf);
 	}
 	private void update(float tpf) {
-		if(varWeightTextScale > 1) {
+		if(varWeightTextScale > varResolutionDifference) {
 			varWeightTextScale -= tpf * 2;
-			if(varWeightTextScale < 1) {
-				varWeightTextScale = 1;
+			if(varWeightTextScale < varResolutionDifference) {
+				varWeightTextScale =  varResolutionDifference;
 			}
 		}
-		if(varScoreScale > 1) {
+		if(varScoreScale > varResolutionDifference) {
 			varScoreScale -= tpf * 2;
-			if(varScoreScale < 1) {
-				varScoreScale = 1;
+			if(varScoreScale < varResolutionDifference) {
+				varScoreScale = varResolutionDifference;
 			}
 		}
 		
@@ -527,7 +530,7 @@ public class GardenWarden implements ApplicationListener {
 		if(nodPlayer.getX() < -3 && (nodPlayer.getZ() > -14 && nodPlayer.getZ() < 14)) {
 			if(varPlantHeld != NOTHING) {
 				varWeightProgress += PLANTWEIGHT[varPlantHeld];
-				varWeightTextScale = 1.1f;
+				varWeightTextScale = 1.1f * varResolutionDifference;
 				sndCollect.play();
 				if(varWeightProgress >= varRequestedWeight){
 					//Add to score depending on weight gathered
@@ -544,7 +547,7 @@ public class GardenWarden implements ApplicationListener {
 						//No score award
 						varJudgeString = strWorstJudge;
 					}
-					varScoreScale = 1.1f;
+					varScoreScale = 1.1f * varResolutionDifference;
 					//Request Completed
 					flgShowJudge = true;
 					
@@ -652,15 +655,15 @@ public class GardenWarden implements ApplicationListener {
 			}
 		}
 		fntUi.setColor(1,1,1,varUiAlpha);
-		fntUi.setScale(varScoreScale);
+		fntUi.setScale(varScoreScale * varResolutionDifference);
 		fntUi.draw(batch2d, varGameScore + "pts", -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
 		fntUi.setColor(1,1,1, Math.min(varUiAlpha, varRequestAlpha));
-		fntUi.setScale(0.8f);
-		fntUi.draw(batch2d, "Gather " + Math.round(varRequestedWeight * 10) / 10f + " lbs", -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight() * 3 / 2f);
+		fntUi.setScale(0.8f * varResolutionDifference);
+		fntUi.draw(batch2d, "Gather " + Math.round(varRequestedWeight * 10) / 10f + " lbs", -CONST_SCREEN_WIDTH/2 + fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight() * 3 * varResolutionDifference / 2f);
 		//fntUi.setScale(2);
 		//String time = Math.round(varTimePerRound - tmrRound) + "s";
 		//fntUi.draw(batch2d, time, -fntUi.getBounds(time).width/2f, CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
-		fntUi.setScale(varWeightTextScale);
+		fntUi.setScale(varWeightTextScale * varResolutionDifference);
 		String weightStats = Math.round(varWeightProgress * 10) / 10f + " lbs";
 		fntUi.draw(batch2d, weightStats, CONST_SCREEN_WIDTH/2 - fntUi.getBounds(weightStats).width - fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight()/2);
 		
@@ -681,12 +684,12 @@ public class GardenWarden implements ApplicationListener {
 		}
 		if(Math.min(varUiAlpha, varWeightAlpha) > 0) {
 			fntUi.setColor(1,1,1, Math.min(varUiAlpha, varWeightAlpha));
-			fntUi.setScale(0.8f);
+			fntUi.setScale(0.8f * varResolutionDifference);
 			String addStats = "+" + Math.round(PLANTWEIGHT[varPlantHeld] * 10) / 10f + "lbs";
-			fntUi.draw(batch2d, addStats, CONST_SCREEN_WIDTH/2 - fntUi.getBounds(addStats).width - fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight() * 3 / 2f);
+			fntUi.draw(batch2d, addStats, CONST_SCREEN_WIDTH/2 - fntUi.getBounds(addStats).width - fntUi.getSpaceWidth(), CONST_SCREEN_HEIGHT/2 - fntUi.getLineHeight() * 3 * varResolutionDifference / 2f);
 		}
 		fntUi.setColor(1,1,1,varUiAlpha);
-		fntUi.setScale(1);
+		fntUi.setScale(varResolutionDifference);
 		//Debug
 		//fntUi.draw(batch2d, "wvdn:" + flgWaveEnd + " sz:" + lstEnemies.size() + " lf:" + (varGardenHealth/varMaxGardenHealth), -CONST_SCREEN_WIDTH/2f,0);
 		
@@ -694,19 +697,19 @@ public class GardenWarden implements ApplicationListener {
 		
 		if(varGameState == GAMESTATE.dead) {
 			fntUi.setColor(1,1,1,varDeathTextAlpha);
-			fntUi.setScale(2);
+			fntUi.setScale(2 * varResolutionDifference);
 			fntUi.draw(batch2d, "Request Failed!", -fntUi.getBounds("Request Failed!").width/2f, fntUi.getLineHeight());
-			fntUi.setScale(1);
+			fntUi.setScale(varResolutionDifference);
 			fntUi.setColor(1,1,1,1);
 		} else if(varGameState == GAMESTATE.score){
-			fntUi.setScale(1.5f);
+			fntUi.setScale(1.5f * varResolutionDifference);
 			fntUi.setColor(1,1,1,1);
 			String score = "Requests Fulfilled: " + cntRound;
-			fntUi.draw(batch2d, score, -fntUi.getBounds(score).width/2f, fntUi.getLineHeight() * 3);
+			fntUi.draw(batch2d, score, -fntUi.getBounds(score).width/2f, fntUi.getLineHeight() * 3 * varResolutionDifference);
 			String score2 = "Score: " + varGameScore;
-			fntUi.draw(batch2d, score2, -fntUi.getBounds(score2).width/2f, fntUi.getLineHeight() * 2);
+			fntUi.draw(batch2d, score2, -fntUi.getBounds(score2).width/2f, fntUi.getLineHeight() * 2 * varResolutionDifference);
 			
-			fntUi.draw(batch2d, "Touch to retry!", -fntUi.getBounds("Touch to retry!").width/2f, -fntUi.getLineHeight() * 3);
+			fntUi.draw(batch2d, "Touch to retry!", -fntUi.getBounds("Touch to retry!").width/2f, -fntUi.getLineHeight() * 3 * varResolutionDifference);
 		}
 		
 		//Draw Touch Arrows
@@ -725,11 +728,12 @@ public class GardenWarden implements ApplicationListener {
 		sprBar.setColor(1,1,1, varUiAlpha);
 		varBarScale = Math.round(varBarScale);
 
-		sprBar.setScale(varBarScale, 2);
+		sprBar.setScale(varBarScale, 2 * varResolutionDifference);
 		sprBar.setPosition(fntUi.getSpaceWidth() + sprBar.getBoundingRectangle().width/2 - CONST_SCREEN_WIDTH / 2f, CONST_SCREEN_HEIGHT / 2f - fntUi.getLineHeight() / 4f);
 		sprBar.draw(batch2d);
 		
 		if(varJudgeAlpha > 0 && varJudgeString != null) {
+			fntUi.setScale(varResolutionDifference);
 			fntUi.setColor(1,1,1,varJudgeAlpha);
 			fntUi.draw(batch2d, varJudgeString, -fntUi.getBounds(varJudgeString).width/2f, varJudgePosY);
 			fntUi.setColor(1,1,1,1);
